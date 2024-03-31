@@ -33,7 +33,7 @@ public class GetProducts : ICarterModule
         : IRequestHandler<GetProductsQuery, List<GetProductsResponse>>
     {
         public Task<List<GetProductsResponse>> Handle(GetProductsQuery request, CancellationToken cancellationToken) =>
-            context.Products.ProjectTo<GetProductsResponse>(mapper.ConfigurationProvider).ToListAsync();
+            context.Products.ProjectTo<GetProductsResponse>(mapper.ConfigurationProvider).ToListAsync(cancellationToken: cancellationToken);
     }
 
     public class GetProductsMappingProfile : Profile

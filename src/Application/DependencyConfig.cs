@@ -18,7 +18,7 @@ public static class DependencyConfig
         services.AddMediatR(config =>
         {
             config.RegisterServicesFromAssembly(typeof(Application).Assembly);
-            config.AddOpenBehavior(typeof(TransactionBehaviour<,>));
+            //config.AddOpenBehavior(typeof(TransactionBehaviour<,>));
         });
         services.AddValidatorsFromAssemblyContaining(typeof(Application));
 

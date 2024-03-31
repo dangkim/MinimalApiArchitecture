@@ -7,6 +7,15 @@ using MinimalApiArchitecture.Application.Helpers;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.AddSerilog();
+builder.Services.AddHttpClient("SimTokenClient", client =>
+{
+    client.BaseAddress = new Uri("https://localhost:44300/connect/");
+});
+
+builder.Services.AddHttpClient("SimApiClient", client =>
+{
+    client.BaseAddress = new Uri("https://localhost:44300/api/content/");
+});
 
 builder.Services.AddWebApiConfig();
 builder.Services.AddApplicationCore();
