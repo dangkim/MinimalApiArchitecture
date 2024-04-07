@@ -21,8 +21,10 @@ export interface IClient {
     updateProduct(command: UpdateProductCommand): Observable<void>;
     deleteProduct(productId: number): Observable<void>;
     getCategories(): Observable<GetCategoriesResponse[]>;
-    getToken(query: GetTokenQuery): Observable<FileResponse>;
-    register(query: RegisterQuery): Observable<FileResponse>;
+    externalLoginGoogle(query: ExternalLoginGoogleQuery): Observable<FileResponse>;
+    getToken(query: GetTokenQuery): Observable<void>;
+    googleRegister(): Observable<FileResponse>;
+    register(query: RegisterQuery): Observable<void>;
     revokeToken(): Observable<FileResponse>;
 }
 
@@ -310,7 +312,63 @@ export class Client implements IClient {
         return _observableOf<GetCategoriesResponse[]>(null as any);
     }
 
-    getToken(query: GetTokenQuery): Observable<FileResponse> {
+    externalLoginGoogle(query: ExternalLoginGoogleQuery): Observable<FileResponse> {
+        let url_ = this.baseUrl + "/api/externalLoginGoogle";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(query);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+                "Accept": "application/octet-stream"
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processExternalLoginGoogle(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processExternalLoginGoogle(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<FileResponse>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<FileResponse>;
+        }));
+    }
+
+    protected processExternalLoginGoogle(response: HttpResponseBase): Observable<FileResponse> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200 || status === 206) {
+            const contentDisposition = response.headers ? response.headers.get("content-disposition") : undefined;
+            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
+            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
+            if (fileName) {
+                fileName = decodeURIComponent(fileName);
+            } else {
+                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
+                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
+            }
+            return _observableOf({ fileName: fileName, data: responseBlob as any, status: status, headers: _headers });
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf<FileResponse>(null as any);
+    }
+
+    getToken(query: GetTokenQuery): Observable<void> {
         let url_ = this.baseUrl + "/api/getToken";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -322,7 +380,6 @@ export class Client implements IClient {
             responseType: "blob",
             headers: new HttpHeaders({
                 "Content-Type": "application/json",
-                "Accept": "application/octet-stream"
             })
         };
 
@@ -333,6 +390,51 @@ export class Client implements IClient {
                 try {
                     return this.processGetToken(response_ as any);
                 } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processGetToken(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
+            return _observableOf<void>(null as any);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf<void>(null as any);
+    }
+
+    googleRegister(): Observable<FileResponse> {
+        let url_ = this.baseUrl + "/api/externalLogin";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "application/octet-stream"
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGoogleRegister(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGoogleRegister(response_ as any);
+                } catch (e) {
                     return _observableThrow(e) as any as Observable<FileResponse>;
                 }
             } else
@@ -340,7 +442,7 @@ export class Client implements IClient {
         }));
     }
 
-    protected processGetToken(response: HttpResponseBase): Observable<FileResponse> {
+    protected processGoogleRegister(response: HttpResponseBase): Observable<FileResponse> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -366,7 +468,7 @@ export class Client implements IClient {
         return _observableOf<FileResponse>(null as any);
     }
 
-    register(query: RegisterQuery): Observable<FileResponse> {
+    register(query: RegisterQuery): Observable<void> {
         let url_ = this.baseUrl + "/api/register";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -378,7 +480,6 @@ export class Client implements IClient {
             responseType: "blob",
             headers: new HttpHeaders({
                 "Content-Type": "application/json",
-                "Accept": "application/octet-stream"
             })
         };
 
@@ -389,37 +490,30 @@ export class Client implements IClient {
                 try {
                     return this.processRegister(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<FileResponse>;
+                    return _observableThrow(e) as any as Observable<void>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<FileResponse>;
+                return _observableThrow(response_) as any as Observable<void>;
         }));
     }
 
-    protected processRegister(response: HttpResponseBase): Observable<FileResponse> {
+    protected processRegister(response: HttpResponseBase): Observable<void> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
             (response as any).error instanceof Blob ? (response as any).error : undefined;
 
         let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 200 || status === 206) {
-            const contentDisposition = response.headers ? response.headers.get("content-disposition") : undefined;
-            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
-            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
-            if (fileName) {
-                fileName = decodeURIComponent(fileName);
-            } else {
-                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
-                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
-            }
-            return _observableOf({ fileName: fileName, data: responseBlob as any, status: status, headers: _headers });
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
+            return _observableOf<void>(null as any);
+            }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             }));
         }
-        return _observableOf<FileResponse>(null as any);
+        return _observableOf<void>(null as any);
     }
 
     revokeToken(): Observable<FileResponse> {
@@ -786,6 +880,42 @@ export class GetCategoriesResponse implements IGetCategoriesResponse {
 export interface IGetCategoriesResponse {
     categoryId?: number;
     name?: string | undefined;
+}
+
+export class ExternalLoginGoogleQuery implements IExternalLoginGoogleQuery {
+    provider?: string | undefined;
+
+    constructor(data?: IExternalLoginGoogleQuery) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.provider = _data["provider"];
+        }
+    }
+
+    static fromJS(data: any): ExternalLoginGoogleQuery {
+        data = typeof data === 'object' ? data : {};
+        let result = new ExternalLoginGoogleQuery();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["provider"] = this.provider;
+        return data;
+    }
+}
+
+export interface IExternalLoginGoogleQuery {
+    provider?: string | undefined;
 }
 
 export class GetTokenQuery implements IGetTokenQuery {

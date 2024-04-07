@@ -37,7 +37,7 @@ public class GetToken : ICarterModule
         .WithName(nameof(GetToken));
     }
 
-    public class GetTokenQuery : IRequest<IActionResult>
+    public class GetTokenQuery : IRequest<IResult>
     {
         public string UserName { get; set; }
         public string Password { get; set; }
@@ -45,9 +45,9 @@ public class GetToken : ICarterModule
     }
 
     public class GetTokenHandler(ApiDbContext context, ILogger<GetTokenHandler> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
-        : IRequestHandler<GetTokenQuery, IActionResult>
+        : IRequestHandler<GetTokenQuery, IResult>
     {
-        public async Task<IActionResult> Handle(GetTokenQuery request, CancellationToken cancellationToken)
+        public async Task<IResult> Handle(GetTokenQuery request, CancellationToken cancellationToken)
         {
             byte[] bytes = Convert.FromBase64String(request.Password);
             string decryptedPassword = Encoding.UTF8.GetString(bytes);
@@ -78,18 +78,20 @@ public class GetToken : ICarterModule
                     {
                         string responseData = await response.Content.ReadAsStringAsync(cancellationToken);
 
-                        return new OkObjectResult(responseData);
+                        return Results.Ok(responseData);
                     }
                     else
                     {
-                        return new StatusCodeResult((int)response.StatusCode);
+                        string responseData = await response.Content.ReadAsStringAsync(cancellationToken);
+                        var responseObject = JsonSerializer.Deserialize<ProblemDetails>(responseData);
+                        return Results.Problem(responseObject!);
                     }
 
                 }
                 catch (Exception ex)
                 {
                     logger.LogWarning("GetTokenHandler: {0}", ex.Message);
-                    return new StatusCodeResult((int)HttpStatusCode.InternalServerError);
+                    return Results.Problem(ex.Message, "", (int)HttpStatusCode.InternalServerError);
                 }
             }
 

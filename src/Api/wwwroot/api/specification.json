@@ -146,6 +146,36 @@
         }
       }
     },
+    "/api/externalLoginGoogle": {
+      "post": {
+        "operationId": "ExternalLoginGoogle",
+        "requestBody": {
+          "x-name": "query",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExternalLoginGoogleQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/getToken": {
       "post": {
         "operationId": "GetToken",
@@ -161,6 +191,16 @@
           "required": true,
           "x-position": 1
         },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/externalLogin": {
+      "post": {
+        "operationId": "GoogleRegister",
         "responses": {
           "200": {
             "description": "",
@@ -193,15 +233,7 @@
         },
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/octet-stream": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              }
-            }
+            "description": ""
           }
         }
       }
@@ -358,6 +390,16 @@
             "format": "int32"
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "ExternalLoginGoogleQuery": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "provider": {
             "type": "string",
             "nullable": true
           }

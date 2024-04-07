@@ -1,4 +1,5 @@
 using Carter;
+using Microsoft.AspNetCore.Authentication;
 using MinimalApiArchitecture.Api;
 using MinimalApiArchitecture.Api.Extensions;
 using MinimalApiArchitecture.Application;
@@ -17,6 +18,11 @@ builder.Services.AddHttpClient("SimApiClient", client =>
     client.BaseAddress = new Uri("https://localhost:44300/api/content/");
 });
 
+builder.Services.AddAuthentication();
+builder.Services.AddSingleton<IAuthenticationSchemeProvider, AuthenticationSchemeProvider>();
+
+// Add HttpContextAccessor
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddWebApiConfig();
 builder.Services.AddApplicationCore();
 builder.Services.AddPersistence(builder.Configuration);

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Azure;
 using Carter;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -37,7 +38,7 @@ public class Register : ICarterModule
         .WithName(nameof(Register));
     }
 
-    public class RegisterQuery : IRequest<IActionResult>
+    public class RegisterQuery : IRequest<IResult>
     {
         public string UserName { get; set; }
         public string Password { get; set; }
@@ -46,9 +47,9 @@ public class Register : ICarterModule
     }
 
     public class RegisterHandler(ApiDbContext context, ILogger<RegisterHandler> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
-        : IRequestHandler<RegisterQuery, IActionResult>
+        : IRequestHandler<RegisterQuery, IResult>
     {
-        public async Task<IActionResult> Handle(RegisterQuery request, CancellationToken cancellationToken)
+        public async Task<IResult> Handle(RegisterQuery request, CancellationToken cancellationToken)
         {
             byte[] bytes = Convert.FromBase64String(request.Password);
             byte[] bytesConfirm = Convert.FromBase64String(request.ConfirmPassword);
@@ -86,17 +87,19 @@ public class Register : ICarterModule
                         // Read the response content as a string
                         string responseData = await response.Content.ReadAsStringAsync(cancellationToken);
 
-                        return new OkObjectResult(responseData);
+                        return Results.Ok(responseData);
                     }
                     else
                     {
-                        return new StatusCodeResult((int)response.StatusCode);
+                        string responseData = await response.Content.ReadAsStringAsync(cancellationToken);
+                        var responseObject = JsonSerializer.Deserialize<ProblemDetails>(responseData);
+                        return Results.Problem(responseObject!);
                     }
                 }
                 catch (Exception ex)
                 {
                     logger.LogWarning("RegisterHandler: {0}", ex.Message);
-                    return new StatusCodeResult((int)HttpStatusCode.InternalServerError);
+                    return Results.Problem(ex.Message, "", (int)HttpStatusCode.InternalServerError);
                 }
             }
 
