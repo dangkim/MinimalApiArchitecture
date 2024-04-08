@@ -15,6 +15,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MinimalApiArchitecture.Application.Infrastructure.Persistence;
+using System.Net;
+using System.Text.Json;
+using System.Text;
+using System.Net.Http;
 
 namespace MinimalApiArchitecture.Application.Features.Authentication.Queries;
 
@@ -22,55 +26,76 @@ public class ExternalLoginGoogle : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        app.MapPost("api/externalLoginGoogle", (IMediator mediator, ExternalLoginGoogleQuery query) =>
+        app.MapGet("api/externalLoginGoogle", (IMediator mediator, IHttpContextAccessor httpContextAccessor) =>
         {
-            return mediator.Send(query);
+            var httpContext = httpContextAccessor.HttpContext;
+            return mediator.Send(new ExternalLoginGoogleQuery { Sign = httpContext.Request.Query["sign"] });
         })
         .WithName(nameof(ExternalLoginGoogle));
     }
 
-    public class ExternalLoginGoogleQuery : IRequest<IActionResult>
+    public class ExternalLoginGoogleQuery : IRequest<IResult>
     {
-        public string? Provider { get; set; }
+        public string? Sign { get; set; }
     }
 
-    public class ExternalLoginGoogleRegisterHandler(ApiDbContext context, ILogger<ExternalLoginGoogleRegisterHandler> logger, IHttpClientFactory httpClientFactory)
-        : IRequestHandler<ExternalLoginGoogleQuery, IActionResult>
+    public class ExternalLoginGoogleRegisterHandler(IHttpContextAccessor httpContextAccessor, ApiDbContext context, ILogger<ExternalLoginGoogleRegisterHandler> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+        : IRequestHandler<ExternalLoginGoogleQuery, IResult>
     {
-        public async Task<IActionResult> Handle(ExternalLoginGoogleQuery request, CancellationToken cancellationToken)
-        {            
+        public async Task<IResult> Handle(ExternalLoginGoogleQuery request, CancellationToken cancellationToken)
+        {
             // Use IHttpClientFactory to create an instance of HttpClient
-            var httpClient = httpClientFactory.CreateClient("SimApiClient");           
+            var httpClient = httpClientFactory.CreateClient("SimTokenClient");
+            byte[] bytes = Convert.FromBase64String(request.Sign!);
+            string userName = Encoding.UTF8.GetString(bytes);
 
             // Create an instance of HttpClient
             using (httpClient)
             {
                 try
                 {
-                    // Create an instance of HttpContent with the serialized request body
-                    // var httpContent = new StringContent(requestBodyJson, Encoding.UTF8, "application/json");
+                    var formData = new Dictionary<string, string>
+                                        {
+                                            { "grant_type", "password" },
+                                            { "client_id", configuration["client_id"]! },
+                                            { "client_secret", configuration["client_secret"]! },
+                                            { "username", userName },
+                                            { "password", userName+ "A@" }
+                                        };
 
-                    // Send a POST request with the HttpContent
-                    var response = await httpClient.GetAsync("ExternalLoginCallback", cancellationToken);
+                    var content = new FormUrlEncodedContent(formData);
+
+                    using var response = await httpClient.PostAsync("token", content, cancellationToken);
 
                     // Check if the request was successful
                     if (response.IsSuccessStatusCode)
                     {
-                        // Read the response content as a string
-                        
                         string responseData = await response.Content.ReadAsStringAsync(cancellationToken);
 
-                        return new OkObjectResult(responseData);
+                        var responseWithCookies = httpContextAccessor.HttpContext.Response;
+
+                        var cookieOptions = new CookieOptions
+                        {
+                            Secure = true, // Set Secure attribute to true
+                            HttpOnly = true // Set HttpOnly attribute to true for additional security
+                        };
+
+                        responseWithCookies.Cookies.Append("stk", responseData, cookieOptions);
+
+                        return Results.Redirect(configuration["simfrontendurl"]!);
                     }
                     else
                     {
-                        return new NotFoundResult();
+                        string responseData = await response.Content.ReadAsStringAsync(cancellationToken);
+                        var responseObject = JsonSerializer.Deserialize<ProblemDetails>(responseData);
+                        return Results.Problem(responseObject!);
                     }
+
                 }
                 catch (Exception ex)
                 {
-                    logger.LogWarning("ExternalLoginGoogleRegisterHandler: {0}", ex.Message);
-                    return new NotFoundResult();
+                    logger.LogWarning("GetTokenHandler: {0}", ex.Message);
+                    return Results.Problem(ex.Message, "", (int)HttpStatusCode.InternalServerError);
                 }
             }
 
@@ -78,10 +103,11 @@ public class ExternalLoginGoogle : ICarterModule
 
     }
 
-    //public class ExternalLoginGoogleRegisterResponse
-    //{
-    //    public int CategoryId { get; set; }
-    //    public string? Name { get; set; }
-    //}
+    public class TokenResponse
+    {
+        public string Access_token { get; set; }
+        public string Token_type { get; set; }
+        public long Expires_in { get; set; }
+    }
 
 }

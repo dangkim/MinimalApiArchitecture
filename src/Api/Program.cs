@@ -4,6 +4,8 @@ using MinimalApiArchitecture.Api;
 using MinimalApiArchitecture.Api.Extensions;
 using MinimalApiArchitecture.Application;
 using MinimalApiArchitecture.Application.Helpers;
+using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,8 +20,6 @@ builder.Services.AddHttpClient("SimApiClient", client =>
     client.BaseAddress = new Uri("https://localhost:44300/api/content/");
 });
 
-builder.Services.AddAuthentication();
-builder.Services.AddSingleton<IAuthenticationSchemeProvider, AuthenticationSchemeProvider>();
 
 // Add HttpContextAccessor
 builder.Services.AddHttpContextAccessor();
@@ -29,6 +29,7 @@ builder.Services.AddPersistence(builder.Configuration);
 
 var app = builder.Build();
 
+app.UseAuthentication();
 app.UseCors(AppConstants.CorsPolicy);
 app.UseStaticFiles();
 app.MapSwagger();

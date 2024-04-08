@@ -60,11 +60,11 @@ namespace MinimalApiArchitecture.Api
         System.Threading.Tasks.Task<System.Collections.Generic.ICollection<GetCategoriesResponse>> GetCategoriesAsync(System.Threading.CancellationToken cancellationToken);
 
         /// <exception cref="SwaggerException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task<FileResponse> ExternalLoginGoogleAsync(ExternalLoginGoogleQuery query);
+        System.Threading.Tasks.Task ExternalLoginGoogleAsync();
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <exception cref="SwaggerException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task<FileResponse> ExternalLoginGoogleAsync(ExternalLoginGoogleQuery query, System.Threading.CancellationToken cancellationToken);
+        System.Threading.Tasks.Task ExternalLoginGoogleAsync(System.Threading.CancellationToken cancellationToken);
 
         /// <exception cref="SwaggerException">A server side error occurred.</exception>
         System.Threading.Tasks.Task GetTokenAsync(GetTokenQuery query);
@@ -74,11 +74,11 @@ namespace MinimalApiArchitecture.Api
         System.Threading.Tasks.Task GetTokenAsync(GetTokenQuery query, System.Threading.CancellationToken cancellationToken);
 
         /// <exception cref="SwaggerException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task<FileResponse> GoogleRegisterAsync();
+        System.Threading.Tasks.Task GoogleRegisterAsync();
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <exception cref="SwaggerException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task<FileResponse> GoogleRegisterAsync(System.Threading.CancellationToken cancellationToken);
+        System.Threading.Tasks.Task GoogleRegisterAsync(System.Threading.CancellationToken cancellationToken);
 
         /// <exception cref="SwaggerException">A server side error occurred.</exception>
         System.Threading.Tasks.Task RegisterAsync(RegisterQuery query);
@@ -555,30 +555,22 @@ namespace MinimalApiArchitecture.Api
         }
 
         /// <exception cref="SwaggerException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<FileResponse> ExternalLoginGoogleAsync(ExternalLoginGoogleQuery query)
+        public virtual System.Threading.Tasks.Task ExternalLoginGoogleAsync()
         {
-            return ExternalLoginGoogleAsync(query, System.Threading.CancellationToken.None);
+            return ExternalLoginGoogleAsync(System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <exception cref="SwaggerException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<FileResponse> ExternalLoginGoogleAsync(ExternalLoginGoogleQuery query, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task ExternalLoginGoogleAsync(System.Threading.CancellationToken cancellationToken)
         {
-            if (query == null)
-                throw new System.ArgumentNullException("query");
-
             var client_ = _httpClient;
             var disposeClient_ = false;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
-                    var json_ = Newtonsoft.Json.JsonConvert.SerializeObject(query, _settings.Value);
-                    var content_ = new System.Net.Http.StringContent(json_);
-                    content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
-                    request_.Content = content_;
-                    request_.Method = new System.Net.Http.HttpMethod("POST");
-                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/octet-stream"));
+                    request_.Method = new System.Net.Http.HttpMethod("GET");
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                     if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
@@ -608,12 +600,9 @@ namespace MinimalApiArchitecture.Api
                         ProcessResponse(client_, response_);
 
                         var status_ = (int)response_.StatusCode;
-                        if (status_ == 200 || status_ == 206)
+                        if (status_ == 200)
                         {
-                            var responseStream_ = response_.Content == null ? System.IO.Stream.Null : await response_.Content.ReadAsStreamAsync().ConfigureAwait(false);
-                            var fileResponse_ = new FileResponse(status_, headers_, responseStream_, null, response_);
-                            disposeClient_ = false; disposeResponse_ = false; // response and client are disposed by FileResponse
-                            return fileResponse_;
+                            return;
                         }
                         else
                         {
@@ -713,14 +702,14 @@ namespace MinimalApiArchitecture.Api
         }
 
         /// <exception cref="SwaggerException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<FileResponse> GoogleRegisterAsync()
+        public virtual System.Threading.Tasks.Task GoogleRegisterAsync()
         {
             return GoogleRegisterAsync(System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <exception cref="SwaggerException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<FileResponse> GoogleRegisterAsync(System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task GoogleRegisterAsync(System.Threading.CancellationToken cancellationToken)
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -728,14 +717,13 @@ namespace MinimalApiArchitecture.Api
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
-                    request_.Content = new System.Net.Http.StringContent(string.Empty, System.Text.Encoding.UTF8, "application/octet-stream");
+                    request_.Content = new System.Net.Http.StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json");
                     request_.Method = new System.Net.Http.HttpMethod("POST");
-                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/octet-stream"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                     if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
-                    // Operation Path: "api/externalLogin"
-                    urlBuilder_.Append("api/externalLogin");
+                    // Operation Path: "api/signin-google"
+                    urlBuilder_.Append("api/signin-google");
 
                     PrepareRequest(client_, request_, urlBuilder_);
 
@@ -760,12 +748,9 @@ namespace MinimalApiArchitecture.Api
                         ProcessResponse(client_, response_);
 
                         var status_ = (int)response_.StatusCode;
-                        if (status_ == 200 || status_ == 206)
+                        if (status_ == 200)
                         {
-                            var responseStream_ = response_.Content == null ? System.IO.Stream.Null : await response_.Content.ReadAsStreamAsync().ConfigureAwait(false);
-                            var fileResponse_ = new FileResponse(status_, headers_, responseStream_, null, response_);
-                            disposeClient_ = false; disposeResponse_ = false; // response and client are disposed by FileResponse
-                            return fileResponse_;
+                            return;
                         }
                         else
                         {
@@ -1552,49 +1537,6 @@ namespace MinimalApiArchitecture.Api
         {
 
             return Newtonsoft.Json.JsonConvert.DeserializeObject<GetCategoriesResponse>(data, new Newtonsoft.Json.JsonSerializerSettings());
-
-        }
-
-        public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
-
-        protected virtual void RaisePropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string propertyName = null)
-        {
-            var handler = PropertyChanged;
-            if (handler != null)
-                handler(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
-        }
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class ExternalLoginGoogleQuery : System.ComponentModel.INotifyPropertyChanged
-    {
-        private string _provider;
-
-        [Newtonsoft.Json.JsonProperty("provider", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public string Provider
-        {
-            get { return _provider; }
-
-            set
-            {
-                if (_provider != value)
-                {
-                    _provider = value;
-                    RaisePropertyChanged();
-                }
-            }
-        }
-
-        public string ToJson()
-        {
-
-            return Newtonsoft.Json.JsonConvert.SerializeObject(this, new Newtonsoft.Json.JsonSerializerSettings());
-
-        }
-        public static ExternalLoginGoogleQuery FromJson(string data)
-        {
-
-            return Newtonsoft.Json.JsonConvert.DeserializeObject<ExternalLoginGoogleQuery>(data, new Newtonsoft.Json.JsonSerializerSettings());
 
         }
 
