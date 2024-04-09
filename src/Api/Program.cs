@@ -29,7 +29,6 @@ builder.Services.AddPersistence(builder.Configuration);
 
 var app = builder.Build();
 
-app.UseAuthentication();
 app.UseCors(AppConstants.CorsPolicy);
 app.UseStaticFiles();
 app.MapSwagger();

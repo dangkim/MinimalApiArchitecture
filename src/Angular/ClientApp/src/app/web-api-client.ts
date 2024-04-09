@@ -26,6 +26,7 @@ export interface IClient {
     googleRegister(): Observable<void>;
     register(query: RegisterQuery): Observable<void>;
     revokeToken(): Observable<FileResponse>;
+    getFSProduct(country: string, op: string, product: string | null): Observable<void>;
 }
 
 @Injectable({
@@ -546,6 +547,59 @@ export class Client implements IClient {
             }));
         }
         return _observableOf<FileResponse>(null as any);
+    }
+
+    getFSProduct(country: string, op: string, product: string | null): Observable<void> {
+        let url_ = this.baseUrl + "/api/getstableproducts/{country}/{op}/{product}";
+        if (country === undefined || country === null)
+            throw new Error("The parameter 'country' must be defined.");
+        url_ = url_.replace("{country}", encodeURIComponent("" + country));
+        if (op === undefined || op === null)
+            throw new Error("The parameter 'op' must be defined.");
+        url_ = url_.replace("{op}", encodeURIComponent("" + op));
+        if (product === undefined || product === null)
+            throw new Error("The parameter 'product' must be defined.");
+        url_ = url_.replace("{product}", encodeURIComponent("" + product));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetFSProduct(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetFSProduct(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processGetFSProduct(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
+            return _observableOf<void>(null as any);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf<void>(null as any);
     }
 }
 
