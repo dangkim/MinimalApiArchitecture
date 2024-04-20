@@ -228,16 +228,37 @@
         }
       }
     },
+    "/api/getstablecountries": {
+      "get": {
+        "operationId": "GetFSCountriesQuery",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/getstableprices": {
+      "get": {
+        "operationId": "GetFSPrices",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/getstableproducts/{country}/{op}/{product}": {
       "get": {
-        "operationId": "GetFSProduct",
+        "operationId": "GetFSProducts",
         "parameters": [
           {
             "name": "country",
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             },
             "x-position": 1
           },
@@ -246,7 +267,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "nullable": true
             },
             "x-position": 2
           },

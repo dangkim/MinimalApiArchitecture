@@ -9,7 +9,7 @@ public static class DependencyConfig
         services.AddCors(options =>
         {
             options.AddPolicy(name: AppConstants.CorsPolicy,
-                builder => { builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader(); });
+                builder => { builder.WithOrigins("https://localhost:3000").AllowAnyMethod().AllowAnyHeader().AllowCredentials(); });
         });
 
         services.AddEndpointsApiExplorer();
