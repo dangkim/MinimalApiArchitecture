@@ -102,11 +102,11 @@ namespace MinimalApiArchitecture.Api
         System.Threading.Tasks.Task GetFSCountriesQueryAsync(System.Threading.CancellationToken cancellationToken);
 
         /// <exception cref="SwaggerException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task GetFSPricesAsync();
+        System.Threading.Tasks.Task GetFSPricesAsync(string country, string product);
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <exception cref="SwaggerException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task GetFSPricesAsync(System.Threading.CancellationToken cancellationToken);
+        System.Threading.Tasks.Task GetFSPricesAsync(string country, string product, System.Threading.CancellationToken cancellationToken);
 
         /// <exception cref="SwaggerException">A server side error occurred.</exception>
         System.Threading.Tasks.Task GetFSProductsAsync(string country, string op, string product);
@@ -1015,14 +1015,14 @@ namespace MinimalApiArchitecture.Api
         }
 
         /// <exception cref="SwaggerException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task GetFSPricesAsync()
+        public virtual System.Threading.Tasks.Task GetFSPricesAsync(string country, string product)
         {
-            return GetFSPricesAsync(System.Threading.CancellationToken.None);
+            return GetFSPricesAsync(country, product, System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <exception cref="SwaggerException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task GetFSPricesAsync(System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task GetFSPricesAsync(string country, string product, System.Threading.CancellationToken cancellationToken)
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -1034,8 +1034,11 @@ namespace MinimalApiArchitecture.Api
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                     if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
-                    // Operation Path: "api/getstableprices"
-                    urlBuilder_.Append("api/getstableprices");
+                    // Operation Path: "api/getstableprices/{country}/{product}"
+                    urlBuilder_.Append("api/getstableprices/");
+                    urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(country, System.Globalization.CultureInfo.InvariantCulture)));
+                    urlBuilder_.Append('/');
+                    urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(product, System.Globalization.CultureInfo.InvariantCulture)));
 
                     PrepareRequest(client_, request_, urlBuilder_);
 

@@ -238,9 +238,31 @@
         }
       }
     },
-    "/api/getstableprices": {
+    "/api/getstableprices/{country}/{product}": {
       "get": {
         "operationId": "GetFSPrices",
+        "parameters": [
+          {
+            "name": "country",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "product",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 2
+          }
+        ],
         "responses": {
           "200": {
             "description": ""

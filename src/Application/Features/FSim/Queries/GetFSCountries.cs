@@ -56,6 +56,7 @@ public class GetFSCountries : ICarterModule
                         productObjects.Add(country.Value.Text_En!, new CountryObject
                         {
                             Iso = country.Value.Iso!.Keys.FirstOrDefault(),
+                            Country = country.Key,
                         });
                     }
 
@@ -79,11 +80,14 @@ public class GetFSCountries : ICarterModule
         public Dictionary<string, int>? Iso { get; set; }
 
         public string? Text_En { get; set; }
+        
     }
 
     public class CountryObject
     {
         public string? Iso { get; set; }
+
+        public string? Country { get; set; }
     }
 
 }

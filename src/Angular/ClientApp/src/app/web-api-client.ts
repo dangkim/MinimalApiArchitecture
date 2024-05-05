@@ -27,7 +27,7 @@ export interface IClient {
     register(query: RegisterQuery): Observable<void>;
     revokeToken(): Observable<FileResponse>;
     getFSCountriesQuery(): Observable<void>;
-    getFSPrices(): Observable<void>;
+    getFSPrices(country: string | null, product: string | null): Observable<void>;
     getFSProducts(country: string | null, op: string | null, product: string | null): Observable<void>;
 }
 
@@ -595,8 +595,14 @@ export class Client implements IClient {
         return _observableOf<void>(null as any);
     }
 
-    getFSPrices(): Observable<void> {
-        let url_ = this.baseUrl + "/api/getstableprices";
+    getFSPrices(country: string | null, product: string | null): Observable<void> {
+        let url_ = this.baseUrl + "/api/getstableprices/{country}/{product}";
+        if (country === undefined || country === null)
+            throw new Error("The parameter 'country' must be defined.");
+        url_ = url_.replace("{country}", encodeURIComponent("" + country));
+        if (product === undefined || product === null)
+            throw new Error("The parameter 'product' must be defined.");
+        url_ = url_.replace("{product}", encodeURIComponent("" + product));
         url_ = url_.replace(/[?&]$/, "");
 
         let options_ : any = {
