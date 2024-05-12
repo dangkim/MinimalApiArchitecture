@@ -1,5 +1,4 @@
-﻿using Azure.Core;
-using Carter;
+﻿using Carter;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -18,29 +17,30 @@ using System.Text.Json;
 
 namespace MinimalApiArchitecture.Application.Features.Authentication.Queries;
 
-public class GetFSPrices : ICarterModule
+public class BuyActionNumber : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        app.MapGet("api/getstableprices/{country?}/{product?}", (IMediator mediator, string? country, string? product) =>
+        app.MapGet("api/buystableproduct/{country}/{op}/{product}", (IMediator mediator, string country, string op, string product) =>
         {
-            return mediator.Send(new GetFSPricesQuery { Country = country, Product = product });
+            return mediator.Send(new BuyActionNumberQuery { Country = country, Op = op, Product = product });
         })
-        .WithName(nameof(GetFSPrices));
+        .WithName(nameof(BuyActionNumber));
     }
 
-    public class GetFSPricesQuery : IRequest<IResult>
+    public class BuyActionNumberQuery : IRequest<IResult>
     {
         public string? Country { get; set; }
+        public string? Op { get; set; }
         public string? Product { get; set; }
     }
 
-    public class GetFSPricesHandler(IHttpContextAccessor httpContextAccessor, ILogger<GetFSPricesHandler> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
-        : IRequestHandler<GetFSPricesQuery, IResult>
+    public class BuyActionNumberHandler(IHttpContextAccessor httpContextAccessor, ILogger<BuyActionNumberHandler> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+        : IRequestHandler<BuyActionNumberQuery, IResult>
     {
-        public async Task<IResult> Handle(GetFSPricesQuery request, CancellationToken cancellationToken)
+        public async Task<IResult> Handle(BuyActionNumberQuery request, CancellationToken cancellationToken)
         {
-            var httpClient = httpClientFactory.CreateClient("SimApiClient");
+            var httpClient = httpClientFactory.CreateClient("SimApiClient");           
 
             using (httpClient)
             {
@@ -50,7 +50,7 @@ public class GetFSPrices : ICarterModule
 
                     var tokenString = ExtractToken.GetToken(httpContext!);
 
-                    var url = string.Format("pricesbycountryandproduct/{0}/{1}/{2}", request.Country ?? "", "any", request.Product ?? "");
+                    var url = string.Format("buyactivation/{0}/{1}/{2}", request.Country, request.Op, request.Product);
 
                     httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenString);
 
@@ -62,7 +62,7 @@ public class GetFSPrices : ICarterModule
                 }
                 catch (Exception ex)
                 {
-                    logger.LogWarning("GetFSPricesHandler: {0}", ex.Message);
+                    logger.LogWarning("BuyActionNumberHandler: {0}", ex.Message);
                     return Results.Problem(ex.Message, "", (int)HttpStatusCode.InternalServerError);
                 }
             }

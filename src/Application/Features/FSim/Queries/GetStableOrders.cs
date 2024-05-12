@@ -1,12 +1,10 @@
-﻿using Azure.Core;
-using Carter;
+﻿using Carter;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using MinimalApiArchitecture.Application.Helpers;
 using MinimalApiArchitecture.Application.Model;
 using System.IO;
 using System.Net;
@@ -15,44 +13,47 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using static MinimalApiArchitecture.Application.Features.Authentication.Queries.GetFSPrices;
 
 namespace MinimalApiArchitecture.Application.Features.Authentication.Queries;
 
-public class GetFSPrices : ICarterModule
+public class GetStableOrders : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        app.MapGet("api/getstableprices/{country?}/{product?}", (IMediator mediator, string? country, string? product) =>
+        app.MapGet("api/getstableorders/{product?}/{country?}", (IMediator mediator, string? product, string? country) =>
         {
-            return mediator.Send(new GetFSPricesQuery { Country = country, Product = product });
+            return mediator.Send(new CheckOrderQuery { Country = country, Product = product });
         })
-        .WithName(nameof(GetFSPrices));
+        .WithName(nameof(GetStableOrders));
     }
 
-    public class GetFSPricesQuery : IRequest<IResult>
+    public class CheckOrderQuery : IRequest<IResult>
     {
         public string? Country { get; set; }
         public string? Product { get; set; }
     }
 
-    public class GetFSPricesHandler(IHttpContextAccessor httpContextAccessor, ILogger<GetFSPricesHandler> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
-        : IRequestHandler<GetFSPricesQuery, IResult>
+    public class CheckOrderHandler(IHttpContextAccessor httpContextAccessor, ILogger<CheckOrderHandler> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+        : IRequestHandler<CheckOrderQuery, IResult>
     {
-        public async Task<IResult> Handle(GetFSPricesQuery request, CancellationToken cancellationToken)
+        public async Task<IResult> Handle(CheckOrderQuery request, CancellationToken cancellationToken)
         {
             var httpClient = httpClientFactory.CreateClient("SimApiClient");
+
+            var httpContext = httpContextAccessor.HttpContext;
+
+            var tokenString = httpContext!.Request.Cookies["stk"];
+
+            var tokenObject = JsonSerializer.Deserialize<Token>(tokenString!);
 
             using (httpClient)
             {
                 try
                 {
-                    var httpContext = httpContextAccessor.HttpContext;
+                    var url = string.Format("orderstableproductcountry/{0}/{1}/{2}", -1, request.Product, request.Country);
 
-                    var tokenString = ExtractToken.GetToken(httpContext!);
-
-                    var url = string.Format("pricesbycountryandproduct/{0}/{1}/{2}", request.Country ?? "", "any", request.Product ?? "");
-
-                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenString);
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenObject!.access_token);
 
                     using var response = await httpClient.GetAsync(url, cancellationToken);
 
@@ -62,7 +63,7 @@ public class GetFSPrices : ICarterModule
                 }
                 catch (Exception ex)
                 {
-                    logger.LogWarning("GetFSPricesHandler: {0}", ex.Message);
+                    logger.LogWarning("CheckOrderHandler: {0}", ex.Message);
                     return Results.Problem(ex.Message, "", (int)HttpStatusCode.InternalServerError);
                 }
             }

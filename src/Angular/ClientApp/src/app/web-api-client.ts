@@ -26,9 +26,12 @@ export interface IClient {
     googleRegister(): Observable<void>;
     register(query: RegisterQuery): Observable<void>;
     revokeToken(): Observable<FileResponse>;
+    updateBalanceByAdmin(query: UpdateBalanceByAdminQuery): Observable<void>;
+    buyActionNumber(country: string, op: string, product: string): Observable<void>;
     getFSCountriesQuery(): Observable<void>;
     getFSPrices(country: string | null, product: string | null): Observable<void>;
     getFSProducts(country: string | null, op: string | null, product: string | null): Observable<void>;
+    getStableOrders(country: string | null, product: string | null): Observable<void>;
 }
 
 @Injectable({
@@ -551,6 +554,107 @@ export class Client implements IClient {
         return _observableOf<FileResponse>(null as any);
     }
 
+    updateBalanceByAdmin(query: UpdateBalanceByAdminQuery): Observable<void> {
+        let url_ = this.baseUrl + "/api/updatebalancebyadmin";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(query);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processUpdateBalanceByAdmin(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processUpdateBalanceByAdmin(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processUpdateBalanceByAdmin(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
+            return _observableOf<void>(null as any);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf<void>(null as any);
+    }
+
+    buyActionNumber(country: string, op: string, product: string): Observable<void> {
+        let url_ = this.baseUrl + "/api/buystableproduct/{country}/{op}/{product}";
+        if (country === undefined || country === null)
+            throw new Error("The parameter 'country' must be defined.");
+        url_ = url_.replace("{country}", encodeURIComponent("" + country));
+        if (op === undefined || op === null)
+            throw new Error("The parameter 'op' must be defined.");
+        url_ = url_.replace("{op}", encodeURIComponent("" + op));
+        if (product === undefined || product === null)
+            throw new Error("The parameter 'product' must be defined.");
+        url_ = url_.replace("{product}", encodeURIComponent("" + product));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processBuyActionNumber(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processBuyActionNumber(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processBuyActionNumber(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
+            return _observableOf<void>(null as any);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf<void>(null as any);
+    }
+
     getFSCountriesQuery(): Observable<void> {
         let url_ = this.baseUrl + "/api/getstablecountries";
         url_ = url_.replace(/[?&]$/, "");
@@ -680,6 +784,56 @@ export class Client implements IClient {
     }
 
     protected processGetFSProducts(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
+            return _observableOf<void>(null as any);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf<void>(null as any);
+    }
+
+    getStableOrders(country: string | null, product: string | null): Observable<void> {
+        let url_ = this.baseUrl + "/api/getstableorders/{country}/{product}";
+        if (country === undefined || country === null)
+            throw new Error("The parameter 'country' must be defined.");
+        url_ = url_.replace("{country}", encodeURIComponent("" + country));
+        if (product === undefined || product === null)
+            throw new Error("The parameter 'product' must be defined.");
+        url_ = url_.replace("{product}", encodeURIComponent("" + product));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetStableOrders(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetStableOrders(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processGetStableOrders(response: HttpResponseBase): Observable<void> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -1094,6 +1248,78 @@ export interface IRegisterQuery {
     userName?: string;
     password?: string;
     confirmPassword?: string;
+}
+
+export class UpdateBalanceByAdminQuery implements IUpdateBalanceByAdminQuery {
+    paymentId?: number;
+    typeName?: string | undefined;
+    providerName?: string | undefined;
+    amount?: number;
+    createdAt?: Date;
+    email?: string | undefined;
+    userId?: number;
+    userName?: string | undefined;
+    password?: string | undefined;
+    method?: string | undefined;
+
+    constructor(data?: IUpdateBalanceByAdminQuery) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.paymentId = _data["paymentId"];
+            this.typeName = _data["typeName"];
+            this.providerName = _data["providerName"];
+            this.amount = _data["amount"];
+            this.createdAt = _data["createdAt"] ? new Date(_data["createdAt"].toString()) : <any>undefined;
+            this.email = _data["email"];
+            this.userId = _data["userId"];
+            this.userName = _data["userName"];
+            this.password = _data["password"];
+            this.method = _data["method"];
+        }
+    }
+
+    static fromJS(data: any): UpdateBalanceByAdminQuery {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateBalanceByAdminQuery();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["paymentId"] = this.paymentId;
+        data["typeName"] = this.typeName;
+        data["providerName"] = this.providerName;
+        data["amount"] = this.amount;
+        data["createdAt"] = this.createdAt ? this.createdAt.toISOString() : <any>undefined;
+        data["email"] = this.email;
+        data["userId"] = this.userId;
+        data["userName"] = this.userName;
+        data["password"] = this.password;
+        data["method"] = this.method;
+        return data;
+    }
+}
+
+export interface IUpdateBalanceByAdminQuery {
+    paymentId?: number;
+    typeName?: string | undefined;
+    providerName?: string | undefined;
+    amount?: number;
+    createdAt?: Date;
+    email?: string | undefined;
+    userId?: number;
+    userName?: string | undefined;
+    password?: string | undefined;
+    method?: string | undefined;
 }
 
 export interface FileResponse {
