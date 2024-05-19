@@ -2,10 +2,12 @@
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MinimalApiArchitecture.Application.Model;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -17,27 +19,43 @@ using static MinimalApiArchitecture.Application.Features.Authentication.Queries.
 
 namespace MinimalApiArchitecture.Application.Features.Authentication.Queries;
 
-public class GetStableOrders : ICarterModule
+public class GetStableOrdersHistory : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        app.MapGet("api/getstableorders/{product?}/{country?}", (IMediator mediator, string? product, string? country) =>
+        app.MapGet("api/getstableordershistory", async (IMediator mediator, [FromQuery] string date, [FromQuery] int limit, [FromQuery] int offset, [FromQuery] string order, [FromQuery] string phone, [FromQuery] bool reverse, [FromQuery] string status, [FromQuery] string product) =>
         {
-            return mediator.Send(new CheckOrderQuery { Country = country, Product = product });
+            return await mediator.Send(new CheckOrderHistoryQuery
+            {
+                Date = date,
+                Limit = limit,
+                Offset = offset,
+                Order = order,
+                Phone = phone,
+                Reverse = reverse,
+                Status = status,
+                Product = product
+            });
         })
-        .WithName(nameof(GetStableOrders));
+        .WithName(nameof(GetStableOrdersHistory));
     }
 
-    public class CheckOrderQuery : IRequest<IResult>
+    public class CheckOrderHistoryQuery : IRequest<IResult>
     {
-        public string? Country { get; set; }
+        public string? Date { get; set; }
+        public int? Limit { get; set; }
+        public int? Offset { get; set; }
+        public string? Order { get; set; }
+        public string? Phone { get; set; }
+        public bool? Reverse { get; set; }
+        public string? Status { get; set; }
         public string? Product { get; set; }
     }
 
     public class CheckOrderHandler(IHttpContextAccessor httpContextAccessor, ILogger<CheckOrderHandler> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
-        : IRequestHandler<CheckOrderQuery, IResult>
+        : IRequestHandler<CheckOrderHistoryQuery, IResult>
     {
-        public async Task<IResult> Handle(CheckOrderQuery request, CancellationToken cancellationToken)
+        public async Task<IResult> Handle(CheckOrderHistoryQuery request, CancellationToken cancellationToken)
         {
             var httpClient = httpClientFactory.CreateClient("SimApiClient");
 
@@ -51,7 +69,15 @@ public class GetStableOrders : ICarterModule
             {
                 try
                 {
-                    var url = string.Format("stableorderproductcountry/{0}/{1}/{2}", -1, request.Product, request.Country);
+                    var url = string.Format("stableordershistory?date={0}&limit={1}&offset={2}&order={3}&reverse={4}&phone={5}&status={6}&product={7}"
+                                            , request.Date
+                                            , request.Limit
+                                            , request.Offset
+                                            , request.Order
+                                            , request.Reverse
+                                            , request.Phone
+                                            , request.Status
+                                            , request.Product);
 
                     httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenObject!.access_token);
 

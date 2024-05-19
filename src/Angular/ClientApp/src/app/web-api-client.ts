@@ -31,7 +31,8 @@ export interface IClient {
     getFSCountriesQuery(): Observable<void>;
     getFSPrices(country: string | null, product: string | null): Observable<void>;
     getFSProducts(country: string | null, op: string | null, product: string | null): Observable<void>;
-    getStableOrders(country: string | null, product: string | null): Observable<void>;
+    getStableOrders(product: string | null, country: string | null): Observable<void>;
+    getStableOrdersHistory(date: string, limit: number, offset: number, order: string, phone: string, reverse: boolean, status: string, product: string): Observable<void>;
 }
 
 @Injectable({
@@ -802,14 +803,14 @@ export class Client implements IClient {
         return _observableOf<void>(null as any);
     }
 
-    getStableOrders(country: string | null, product: string | null): Observable<void> {
-        let url_ = this.baseUrl + "/api/getstableorders/{country}/{product}";
-        if (country === undefined || country === null)
-            throw new Error("The parameter 'country' must be defined.");
-        url_ = url_.replace("{country}", encodeURIComponent("" + country));
+    getStableOrders(product: string | null, country: string | null): Observable<void> {
+        let url_ = this.baseUrl + "/api/getstableorders/{product}/{country}";
         if (product === undefined || product === null)
             throw new Error("The parameter 'product' must be defined.");
         url_ = url_.replace("{product}", encodeURIComponent("" + product));
+        if (country === undefined || country === null)
+            throw new Error("The parameter 'country' must be defined.");
+        url_ = url_.replace("{country}", encodeURIComponent("" + country));
         url_ = url_.replace(/[?&]$/, "");
 
         let options_ : any = {
@@ -834,6 +835,82 @@ export class Client implements IClient {
     }
 
     protected processGetStableOrders(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
+            return _observableOf<void>(null as any);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf<void>(null as any);
+    }
+
+    getStableOrdersHistory(date: string, limit: number, offset: number, order: string, phone: string, reverse: boolean, status: string, product: string): Observable<void> {
+        let url_ = this.baseUrl + "/api/getstableordershistory?";
+        if (date === undefined || date === null)
+            throw new Error("The parameter 'date' must be defined and cannot be null.");
+        else
+            url_ += "date=" + encodeURIComponent("" + date) + "&";
+        if (limit === undefined || limit === null)
+            throw new Error("The parameter 'limit' must be defined and cannot be null.");
+        else
+            url_ += "limit=" + encodeURIComponent("" + limit) + "&";
+        if (offset === undefined || offset === null)
+            throw new Error("The parameter 'offset' must be defined and cannot be null.");
+        else
+            url_ += "offset=" + encodeURIComponent("" + offset) + "&";
+        if (order === undefined || order === null)
+            throw new Error("The parameter 'order' must be defined and cannot be null.");
+        else
+            url_ += "order=" + encodeURIComponent("" + order) + "&";
+        if (phone === undefined || phone === null)
+            throw new Error("The parameter 'phone' must be defined and cannot be null.");
+        else
+            url_ += "phone=" + encodeURIComponent("" + phone) + "&";
+        if (reverse === undefined || reverse === null)
+            throw new Error("The parameter 'reverse' must be defined and cannot be null.");
+        else
+            url_ += "reverse=" + encodeURIComponent("" + reverse) + "&";
+        if (status === undefined || status === null)
+            throw new Error("The parameter 'status' must be defined and cannot be null.");
+        else
+            url_ += "status=" + encodeURIComponent("" + status) + "&";
+        if (product === undefined || product === null)
+            throw new Error("The parameter 'product' must be defined and cannot be null.");
+        else
+            url_ += "product=" + encodeURIComponent("" + product) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetStableOrdersHistory(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetStableOrdersHistory(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processGetStableOrdersHistory(response: HttpResponseBase): Observable<void> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :

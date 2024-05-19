@@ -373,12 +373,12 @@
         }
       }
     },
-    "/api/getstableorders/{country}/{product}": {
+    "/api/getstableorders/{product}/{country}": {
       "get": {
         "operationId": "GetStableOrders",
         "parameters": [
           {
-            "name": "country",
+            "name": "product",
             "in": "path",
             "required": true,
             "schema": {
@@ -388,7 +388,7 @@
             "x-position": 1
           },
           {
-            "name": "product",
+            "name": "country",
             "in": "path",
             "required": true,
             "schema": {
@@ -396,6 +396,92 @@
               "nullable": true
             },
             "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/getstableordershistory": {
+      "get": {
+        "operationId": "GetStableOrdersHistory",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 2
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 3
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 4
+          },
+          {
+            "name": "phone",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 5
+          },
+          {
+            "name": "reverse",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "boolean"
+            },
+            "x-position": 6
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 7
+          },
+          {
+            "name": "product",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 8
           }
         ],
         "responses": {
