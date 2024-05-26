@@ -373,6 +373,28 @@
         }
       }
     },
+    "/api/getstableorderbyid/{orderId}": {
+      "get": {
+        "operationId": "GetStableOrderById",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/getstableorders/{product}/{country}": {
       "get": {
         "operationId": "GetStableOrders",
