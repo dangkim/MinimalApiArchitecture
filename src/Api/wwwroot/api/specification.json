@@ -250,6 +250,72 @@
         }
       }
     },
+    "/api/banstableorderstatusbyid/{orderId}": {
+      "get": {
+        "operationId": "BanStableOrderStatusById",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/cancelstableorderstatusbyid/{orderId}": {
+      "get": {
+        "operationId": "CancelStableOrderStatusById",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/finishstableorderstatusbyid/{orderId}": {
+      "get": {
+        "operationId": "FinishStableOrderStatusById",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/buystableproduct/{country}/{op}/{product}": {
       "get": {
         "operationId": "BuyActionNumber",
