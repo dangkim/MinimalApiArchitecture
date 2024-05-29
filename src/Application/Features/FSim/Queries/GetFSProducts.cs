@@ -53,7 +53,7 @@ public class GetFSProducts : ICarterModule
                 }
                 catch (Exception ex)
                 {
-                    logger.LogWarning("GetFSProductHandler: {0}", ex.Message);
+                    logger.LogWarning("GetFSProductHandler: {Message}", ex.Message);
                     return Results.Problem(ex.Message, "", (int)HttpStatusCode.InternalServerError);
                 }
             }

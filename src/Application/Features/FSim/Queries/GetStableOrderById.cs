@@ -33,7 +33,7 @@ public class GetStableOrderById : ICarterModule
         public string? OrderId { get; set; }
     }
 
-    public class CheckOrderHandler(IHttpContextAccessor httpContextAccessor, ILogger<CheckOrderHandler> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+    public class GetStableOrderByIdHandler(IHttpContextAccessor httpContextAccessor, ILogger<GetStableOrderByIdHandler> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
         : IRequestHandler<CheckOrderQuery, IResult>
     {
         public async Task<IResult> Handle(CheckOrderQuery request, CancellationToken cancellationToken)
@@ -62,7 +62,7 @@ public class GetStableOrderById : ICarterModule
                 }
                 catch (Exception ex)
                 {
-                    logger.LogWarning("CheckOrderHandler: {Message}", ex.Message);
+                    logger.LogWarning("GetStableOrderByIdHandler: {Message}", ex.Message);
                     return Results.Problem(ex.Message, "", (int)HttpStatusCode.InternalServerError);
                 }
             }

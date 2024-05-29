@@ -25,7 +25,7 @@ public class GetStableOrdersHistory : ICarterModule
     {
         app.MapGet("api/getstableordershistory", async (IMediator mediator, [FromQuery] string date, [FromQuery] int limit, [FromQuery] int offset, [FromQuery] string order, [FromQuery] string phone, [FromQuery] bool reverse, [FromQuery] string status, [FromQuery] string product) =>
         {
-            return await mediator.Send(new CheckOrderHistoryQuery
+            return await mediator.Send(new GetStableOrdersHistoryQuery
             {
                 Date = date,
                 Limit = limit,
@@ -40,7 +40,7 @@ public class GetStableOrdersHistory : ICarterModule
         .WithName(nameof(GetStableOrdersHistory));
     }
 
-    public class CheckOrderHistoryQuery : IRequest<IResult>
+    public class GetStableOrdersHistoryQuery : IRequest<IResult>
     {
         public string? Date { get; set; }
         public int? Limit { get; set; }
@@ -52,10 +52,10 @@ public class GetStableOrdersHistory : ICarterModule
         public string? Product { get; set; }
     }
 
-    public class CheckOrderHandler(IHttpContextAccessor httpContextAccessor, ILogger<CheckOrderHandler> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
-        : IRequestHandler<CheckOrderHistoryQuery, IResult>
+    public class GetStableOrdersHistoryHandler(IHttpContextAccessor httpContextAccessor, ILogger<GetStableOrdersHistoryHandler> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+        : IRequestHandler<GetStableOrdersHistoryQuery, IResult>
     {
-        public async Task<IResult> Handle(CheckOrderHistoryQuery request, CancellationToken cancellationToken)
+        public async Task<IResult> Handle(GetStableOrdersHistoryQuery request, CancellationToken cancellationToken)
         {
             var httpClient = httpClientFactory.CreateClient("SimApiClient");
 
@@ -89,7 +89,7 @@ public class GetStableOrdersHistory : ICarterModule
                 }
                 catch (Exception ex)
                 {
-                    logger.LogWarning("CheckOrderHandler: {0}", ex.Message);
+                    logger.LogWarning("GetStableOrdersHistory: {Message}", ex.Message);
                     return Results.Problem(ex.Message, "", (int)HttpStatusCode.InternalServerError);
                 }
             }
@@ -97,12 +97,4 @@ public class GetStableOrdersHistory : ICarterModule
         }
 
     }
-
-    public class FSProduct
-    {
-        public string? Category { get; set; }
-        public int Qty { get; set; }
-        public decimal Price { get; set; }
-    }
-
 }

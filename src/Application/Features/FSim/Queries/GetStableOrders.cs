@@ -23,21 +23,21 @@ public class GetStableOrders : ICarterModule
     {
         app.MapGet("api/getstableorders/{product?}/{country?}", (IMediator mediator, string? product, string? country) =>
         {
-            return mediator.Send(new CheckOrderQuery { Country = country, Product = product });
+            return mediator.Send(new GetStableQuery { Country = country, Product = product });
         })
         .WithName(nameof(GetStableOrders));
     }
 
-    public class CheckOrderQuery : IRequest<IResult>
+    public class GetStableQuery : IRequest<IResult>
     {
         public string? Country { get; set; }
         public string? Product { get; set; }
     }
 
-    public class CheckOrderHandler(IHttpContextAccessor httpContextAccessor, ILogger<CheckOrderHandler> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
-        : IRequestHandler<CheckOrderQuery, IResult>
+    public class GetStableHandler(IHttpContextAccessor httpContextAccessor, ILogger<GetStableHandler> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+        : IRequestHandler<GetStableQuery, IResult>
     {
-        public async Task<IResult> Handle(CheckOrderQuery request, CancellationToken cancellationToken)
+        public async Task<IResult> Handle(GetStableQuery request, CancellationToken cancellationToken)
         {
             var httpClient = httpClientFactory.CreateClient("SimApiClient");
 
@@ -63,7 +63,7 @@ public class GetStableOrders : ICarterModule
                 }
                 catch (Exception ex)
                 {
-                    logger.LogWarning("CheckOrderHandler: {0}", ex.Message);
+                    logger.LogWarning("GetStable: {Message}", ex.Message);
                     return Results.Problem(ex.Message, "", (int)HttpStatusCode.InternalServerError);
                 }
             }
@@ -71,12 +71,4 @@ public class GetStableOrders : ICarterModule
         }
 
     }
-
-    public class FSProduct
-    {
-        public string? Category { get; set; }
-        public int Qty { get; set; }
-        public decimal Price { get; set; }
-    }
-
 }
