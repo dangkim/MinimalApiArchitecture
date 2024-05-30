@@ -1,14 +1,15 @@
 ﻿using Carter;
+using System.Net;
+using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System.Net;
-using System.Net.Http.Json;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace MinimalApiArchitecture.Application.Features.Authentication.Queries;
 
@@ -80,7 +81,7 @@ public class GetFSCountries : ICarterModule
         public Dictionary<string, int>? Iso { get; set; }
 
         public string? Text_En { get; set; }
-        
+
     }
 
     public class CountryObject

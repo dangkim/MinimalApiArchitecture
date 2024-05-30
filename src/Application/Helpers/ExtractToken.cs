@@ -13,6 +13,7 @@ namespace MinimalApiArchitecture.Application.Helpers
     {
         public static string GetToken(HttpContext httpContext)
         {
+            // We check both cases client using header (API) and cookies (From Web)
             var authHeaderParts = httpContext!.Request.Headers.Authorization.ToString().Split(' ');
 
             var bearerValue = (authHeaderParts.Length == 2 && authHeaderParts[0] == "Bearer") ? authHeaderParts[1] : string.Empty;

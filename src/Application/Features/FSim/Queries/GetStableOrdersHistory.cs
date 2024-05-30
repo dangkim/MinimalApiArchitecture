@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using MinimalApiArchitecture.Application.Helpers;
 using MinimalApiArchitecture.Application.Model;
 using System.Collections.Generic;
 using System.IO;
@@ -59,11 +60,14 @@ public class GetStableOrdersHistory : ICarterModule
         {
             var httpClient = httpClientFactory.CreateClient("SimApiClient");
 
-            var httpContext = httpContextAccessor.HttpContext;
+            var httpContext = httpContextAccessor.HttpContext!;
 
-            var tokenString = httpContext!.Request.Cookies["stk"];
+            var tokenString = ValidateTokenHelper.ValidateAndExtractToken(httpContext, out IResult? validationResult);
 
-            var tokenObject = JsonSerializer.Deserialize<Token>(tokenString!);
+            if (validationResult != null)
+            {
+                return validationResult;
+            }
 
             using (httpClient)
             {
@@ -79,7 +83,7 @@ public class GetStableOrdersHistory : ICarterModule
                                             , request.Status
                                             , request.Product);
 
-                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenObject!.access_token);
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenString);
 
                     using var response = await httpClient.GetAsync(url, cancellationToken);
 

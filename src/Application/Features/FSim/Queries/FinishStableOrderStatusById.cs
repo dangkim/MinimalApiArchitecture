@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using MinimalApiArchitecture.Application.Helpers;
 using MinimalApiArchitecture.Application.Model;
 using System.IO;
 using System.Net;
@@ -38,21 +39,24 @@ public class FinishStableOrderStatusById : ICarterModule
     {
         public async Task<IResult> Handle(FinishStableOrderStatusByIdQuery request, CancellationToken cancellationToken)
         {
-            var httpClient = httpClientFactory.CreateClient("SimApiClient");
-
-            var httpContext = httpContextAccessor.HttpContext;
-
-            var tokenString = httpContext!.Request.Cookies["stk"];
-
-            var tokenObject = JsonSerializer.Deserialize<Token>(tokenString!);
+            var httpClient = httpClientFactory.CreateClient("SimApiClient");            
 
             using (httpClient)
             {
                 try
                 {
+                    var httpContext = httpContextAccessor.HttpContext!;
+
+                    var tokenString = ValidateTokenHelper.ValidateAndExtractToken(httpContext, out IResult? validationResult);
+
+                    if (validationResult != null)
+                    {
+                        return validationResult;
+                    }
+
                     var url = string.Format("finishorder/{0}", request.OrderId);
 
-                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenObject!.access_token);
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenString);
 
                     using var response = await httpClient.GetAsync(url, cancellationToken);
 

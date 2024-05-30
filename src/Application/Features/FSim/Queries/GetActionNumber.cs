@@ -40,7 +40,7 @@ public class BuyActionNumber : ICarterModule
     {
         public async Task<IResult> Handle(BuyActionNumberQuery request, CancellationToken cancellationToken)
         {
-            var httpClient = httpClientFactory.CreateClient("SimApiClient");           
+            var httpClient = httpClientFactory.CreateClient("SimApiClient");
 
             using (httpClient)
             {
@@ -48,7 +48,7 @@ public class BuyActionNumber : ICarterModule
                 {
                     var httpContext = httpContextAccessor.HttpContext;
 
-                    var tokenString = ExtractToken.GetToken(httpContext!);
+                    var tokenString = httpContext!.Items["Token"]!.ToString();
 
                     var url = string.Format("buyactivation/{0}/{1}/{2}", request.Country, request.Op, request.Product);
 

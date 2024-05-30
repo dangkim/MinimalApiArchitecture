@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using MinimalApiArchitecture.Application.Helpers;
 using MinimalApiArchitecture.Application.Model;
 using System.IO;
 using System.Net;
@@ -39,33 +40,38 @@ public class GetStableOrders : ICarterModule
     {
         public async Task<IResult> Handle(GetStableQuery request, CancellationToken cancellationToken)
         {
-            var httpClient = httpClientFactory.CreateClient("SimApiClient");
-
-            var httpContext = httpContextAccessor.HttpContext;
-
-            var tokenString = httpContext!.Request.Cookies["stk"];
-
-            var tokenObject = JsonSerializer.Deserialize<Token>(tokenString!);
-
-            using (httpClient)
+            try
             {
-                try
+                var httpClient = httpClientFactory.CreateClient("SimApiClient");
+
+                var httpContext = httpContextAccessor.HttpContext!;
+
+                var tokenString = ValidateTokenHelper.ValidateAndExtractToken(httpContext, out IResult? validationResult);
+
+                if (validationResult != null)
                 {
+                    return validationResult;
+                }
+
+                using (httpClient)
+                {
+
                     var url = string.Format("stableorderproductcountry/{0}/{1}/{2}", -1, request.Product, request.Country);
 
-                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenObject!.access_token);
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenString);
 
                     using var response = await httpClient.GetAsync(url, cancellationToken);
 
                     var responseData = await response.Content.ReadFromJsonAsync<object>(cancellationToken);
 
                     return Results.Ok(responseData);
+
                 }
-                catch (Exception ex)
-                {
-                    logger.LogWarning("GetStable: {Message}", ex.Message);
-                    return Results.Problem(ex.Message, "", (int)HttpStatusCode.InternalServerError);
-                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning("GetStable: {Message}", ex.Message);
+                return Results.Problem(ex.Message, "", (int)HttpStatusCode.InternalServerError);
             }
 
         }

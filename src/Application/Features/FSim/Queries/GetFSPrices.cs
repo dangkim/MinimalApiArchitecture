@@ -46,9 +46,14 @@ public class GetFSPrices : ICarterModule
             {
                 try
                 {
-                    var httpContext = httpContextAccessor.HttpContext;
+                    var httpContext = httpContextAccessor.HttpContext!;
 
-                    var tokenString = ExtractToken.GetToken(httpContext!);
+                    var tokenString = ValidateTokenHelper.ValidateAndExtractToken(httpContext, out IResult? validationResult);
+
+                    if (validationResult != null)
+                    {
+                        return validationResult;
+                    }
 
                     var url = string.Format("pricesbycountryandproduct/{0}/{1}/{2}", request.Country ?? "", "any", request.Product ?? "");
 
