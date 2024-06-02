@@ -46,7 +46,7 @@ public class Register : ICarterModule
 
     }
 
-    public class RegisterHandler(ApiDbContext context, ILogger<RegisterHandler> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+    public class RegisterHandler(IHttpContextAccessor httpContextAccessor, ILogger<RegisterHandler> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
         : IRequestHandler<RegisterQuery, IResult>
     {
         public async Task<IResult> Handle(RegisterQuery request, CancellationToken cancellationToken)
@@ -58,6 +58,7 @@ public class Register : ICarterModule
 
             // Use IHttpClientFactory to create an instance of HttpClient
             var httpClient = httpClientFactory.CreateClient("SimApiClient");
+            var httpTokenClient = httpClientFactory.CreateClient("SimTokenClient");
 
             // Create an instance of the request body
             var requestBody = new
@@ -84,8 +85,40 @@ public class Register : ICarterModule
                     // Check if the request was successful
                     if (response.IsSuccessStatusCode)
                     {
+                        var responseWithCookies = httpContextAccessor.HttpContext.Response;
+
                         // Read the response content as a string
                         string responseData = await response.Content.ReadAsStringAsync(cancellationToken);
+
+                        // Get token
+                        var formData = new Dictionary<string, string>
+                                        {
+                                            { "grant_type", "password" },
+                                            { "client_id", configuration["client_id"] },
+                                            { "client_secret", configuration["client_secret"] },
+                                            { "username", request.UserName },
+                                            { "password", decryptedPassword }
+                                        };
+
+                        var content = new FormUrlEncodedContent(formData);
+
+                        using var responseToken = await httpTokenClient.PostAsync("token", content, cancellationToken);
+
+                        if (responseToken.IsSuccessStatusCode)
+                        {
+                            string responseDataToken = await responseToken.Content.ReadAsStringAsync(cancellationToken);
+
+                            var cookieOptions = new CookieOptions
+                            {
+                                Secure = true,
+                                HttpOnly = true,
+                                SameSite = SameSiteMode.None
+                            };
+
+                            responseWithCookies.Cookies.Append("stk", responseDataToken, cookieOptions);
+
+                            return Results.Ok(responseData);
+                        }
 
                         return Results.Ok(responseData);
                     }
@@ -98,7 +131,7 @@ public class Register : ICarterModule
                 }
                 catch (Exception ex)
                 {
-                    logger.LogWarning("RegisterHandler: {0}", ex.Message);
+                    logger.LogWarning("RegisterHandler: {Message}", ex.Message);
                     return Results.Problem(ex.Message, "", (int)HttpStatusCode.InternalServerError);
                 }
             }

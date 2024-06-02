@@ -94,7 +94,7 @@ public class ExternalLoginGoogle : ICarterModule
                 }
                 catch (Exception ex)
                 {
-                    logger.LogWarning("GetTokenHandler: {0}", ex.Message);
+                    logger.LogWarning("GetTokenHandler: {Message}", ex.Message);
                     return Results.Problem(ex.Message, "", (int)HttpStatusCode.InternalServerError);
                 }
             }

@@ -355,6 +355,16 @@
         }
       }
     },
+    "/api/getapikey": {
+      "get": {
+        "operationId": "GetApiKey",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/getstablecountries": {
       "get": {
         "operationId": "GetFSCountriesQuery",
@@ -432,6 +442,16 @@
             "x-position": 3
           }
         ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/getrefreshkey": {
+      "get": {
+        "operationId": "GetRefreshKey",
         "responses": {
           "200": {
             "description": ""

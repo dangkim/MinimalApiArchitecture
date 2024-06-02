@@ -86,7 +86,7 @@ public class RevokeToken : ICarterModule
                 }
                 catch (Exception ex)
                 {
-                    logger.LogWarning("RevokeTokenHandler: {0}", ex.Message);
+                    logger.LogWarning("RevokeTokenHandler: {Message}", ex.Message);
                     return new StatusCodeResult((int)HttpStatusCode.InternalServerError);
                 }
             }            

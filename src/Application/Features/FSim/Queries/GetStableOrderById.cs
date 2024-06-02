@@ -74,12 +74,4 @@ public class GetStableOrderById : ICarterModule
         }
 
     }
-
-    public class FSProduct
-    {
-        public string? Category { get; set; }
-        public int Qty { get; set; }
-        public decimal Price { get; set; }
-    }
-
 }

@@ -46,9 +46,14 @@ public class BuyActionNumber : ICarterModule
             {
                 try
                 {
-                    var httpContext = httpContextAccessor.HttpContext;
+                    var httpContext = httpContextAccessor.HttpContext!;
 
-                    var tokenString = httpContext!.Items["Token"]!.ToString();
+                    var tokenString = ValidateTokenHelper.ValidateAndExtractToken(httpContext, out IResult? validationResult);
+
+                    if (validationResult != null)
+                    {
+                        return validationResult;
+                    }
 
                     var url = string.Format("buyactivation/{0}/{1}/{2}", request.Country, request.Op, request.Product);
 
@@ -70,12 +75,4 @@ public class BuyActionNumber : ICarterModule
         }
 
     }
-
-    public class FSProduct
-    {
-        public string? Category { get; set; }
-        public int Qty { get; set; }
-        public decimal Price { get; set; }
-    }
-
 }

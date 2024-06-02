@@ -16,8 +16,10 @@ using MinimalApiArchitecture.Application.Domain.Entities;
 using MinimalApiArchitecture.Application.Features.Products.EventHandlers;
 using MinimalApiArchitecture.Application.Helpers;
 using MinimalApiArchitecture.Application.Infrastructure.Persistence;
+using MinimalApiArchitecture.Application.Model;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Cryptography.Xml;
 using System.Text;
@@ -44,7 +46,7 @@ public class GetToken : ICarterModule
 
     }
 
-    public class GetTokenHandler(ApiDbContext context, ILogger<GetTokenHandler> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+    public class GetTokenHandler(IHttpContextAccessor httpContextAccessor, ILogger<GetTokenHandler> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
         : IRequestHandler<GetTokenQuery, IResult>
     {
         public async Task<IResult> Handle(GetTokenQuery request, CancellationToken cancellationToken)
@@ -52,11 +54,9 @@ public class GetToken : ICarterModule
             byte[] bytes = Convert.FromBase64String(request.Password);
             string decryptedPassword = Encoding.UTF8.GetString(bytes);
 
-            // Use IHttpClientFactory to create an instance of HttpClient
-            var httpClient = httpClientFactory.CreateClient("SimTokenClient");
+            var httpTokenClient = httpClientFactory.CreateClient("SimTokenClient");
 
-            // Create an instance of HttpClient
-            using (httpClient)
+            using (httpTokenClient)
             {
                 try
                 {
@@ -71,14 +71,35 @@ public class GetToken : ICarterModule
 
                     var content = new FormUrlEncodedContent(formData);
 
-                    using var response = await httpClient.PostAsync("token", content, cancellationToken);
+                    using var response = await httpTokenClient.PostAsync("token", content, cancellationToken);
                     
                     // Check if the request was successful
                     if (response.IsSuccessStatusCode)
                     {
-                        string responseData = await response.Content.ReadAsStringAsync(cancellationToken);
+                        var responseData = await response.Content.ReadAsStringAsync(cancellationToken);
 
-                        return Results.Ok(responseData);
+                        using var httpProfileClient = httpClientFactory.CreateClient("SimApiClient");
+
+                        var url = string.Format("profile");
+
+                        httpProfileClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", JsonSerializer.Deserialize<Token>(responseData)!.access_token);
+
+                        using var responseProfile = await httpProfileClient.GetAsync(url, cancellationToken);
+
+                        var responseProfileData = await responseProfile.Content.ReadFromJsonAsync<object>(cancellationToken);
+
+                        var responseWithCookies = httpContextAccessor.HttpContext.Response;
+
+                        var cookieOptions = new CookieOptions
+                        {
+                            Secure = true,
+                            HttpOnly = true,
+                            SameSite = SameSiteMode.None
+                        };
+
+                        responseWithCookies.Cookies.Append("stk", responseData, cookieOptions);
+
+                        return Results.Ok(responseProfileData);
                     }
                     else
                     {
@@ -90,7 +111,7 @@ public class GetToken : ICarterModule
                 }
                 catch (Exception ex)
                 {
-                    logger.LogWarning("GetTokenHandler: {0}", ex.Message);
+                    logger.LogWarning("GetTokenHandler: {Message}", ex.Message);
                     return Results.Problem(ex.Message, "", (int)HttpStatusCode.InternalServerError);
                 }
             }
