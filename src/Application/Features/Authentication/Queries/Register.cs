@@ -88,7 +88,7 @@ public class Register : ICarterModule
                         var responseWithCookies = httpContextAccessor.HttpContext.Response;
 
                         // Read the response content as a string
-                        string responseData = await response.Content.ReadAsStringAsync(cancellationToken);
+                        var responseData = await response.Content.ReadFromJsonAsync<object>(cancellationToken);
 
                         // Get token
                         var formData = new Dictionary<string, string>

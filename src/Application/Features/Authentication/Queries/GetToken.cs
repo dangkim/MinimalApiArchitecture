@@ -72,7 +72,7 @@ public class GetToken : ICarterModule
                     var content = new FormUrlEncodedContent(formData);
 
                     using var response = await httpTokenClient.PostAsync("token", content, cancellationToken);
-                    
+
                     // Check if the request was successful
                     if (response.IsSuccessStatusCode)
                     {
@@ -86,20 +86,29 @@ public class GetToken : ICarterModule
 
                         using var responseProfile = await httpProfileClient.GetAsync(url, cancellationToken);
 
-                        var responseProfileData = await responseProfile.Content.ReadFromJsonAsync<object>(cancellationToken);
-
-                        var responseWithCookies = httpContextAccessor.HttpContext.Response;
-
-                        var cookieOptions = new CookieOptions
+                        if (responseProfile.IsSuccessStatusCode)
                         {
-                            Secure = true,
-                            HttpOnly = true,
-                            SameSite = SameSiteMode.None
-                        };
+                            var responseProfileData = await responseProfile.Content.ReadFromJsonAsync<object>(cancellationToken);
 
-                        responseWithCookies.Cookies.Append("stk", responseData, cookieOptions);
+                            var responseWithCookies = httpContextAccessor.HttpContext.Response;
 
-                        return Results.Ok(responseProfileData);
+                            var cookieOptions = new CookieOptions
+                            {
+                                Secure = true,
+                                HttpOnly = true,
+                                SameSite = SameSiteMode.None
+                            };
+
+                            responseWithCookies.Cookies.Append("stk", responseData, cookieOptions);
+
+                            return Results.Ok(responseProfileData);
+                        }
+                        else
+                        {
+                            string responseProfileData = await response.Content.ReadAsStringAsync(cancellationToken);
+                            var responseObject = JsonSerializer.Deserialize<ProblemDetails>(responseData);
+                            return Results.Problem(responseObject!);
+                        }
                     }
                     else
                     {
