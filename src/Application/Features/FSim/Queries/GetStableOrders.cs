@@ -70,8 +70,8 @@ public class GetStableOrders : ICarterModule
             }
             catch (Exception ex)
             {
-                logger.LogWarning("GetStable: {Message}", ex.Message);
-                return Results.Problem(ex.Message, "", (int)HttpStatusCode.InternalServerError);
+                logger.LogWarning("GetStable: {Message}", ex.InnerException);
+                return Results.Problem(ex.InnerException!.Message, "", (int)HttpStatusCode.InternalServerError);
             }
 
         }

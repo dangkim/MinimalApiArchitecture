@@ -43,7 +43,7 @@ public partial class TokenValidationMiddleware(RequestDelegate next, ILogger<Tok
         }
         catch (JsonException ex)
         {
-            _logger.LogWarning("TokenValidationMiddleware failed: {Message}", ex.Message);
+            _logger.LogWarning("TokenValidationMiddleware failed: {Message}", ex.InnerException);
             context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
             await context.Response.WriteAsync("Internal Server Error");
         }

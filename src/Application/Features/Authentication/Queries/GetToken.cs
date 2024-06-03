@@ -76,7 +76,7 @@ public class GetToken : ICarterModule
                     // Check if the request was successful
                     if (response.IsSuccessStatusCode)
                     {
-                        var responseData = await response.Content.ReadAsStringAsync(cancellationToken);
+                       var responseData = await response.Content.ReadAsStringAsync(cancellationToken);
 
                         using var httpProfileClient = httpClientFactory.CreateClient("SimApiClient");
 
@@ -120,8 +120,8 @@ public class GetToken : ICarterModule
                 }
                 catch (Exception ex)
                 {
-                    logger.LogWarning("GetTokenHandler: {Message}", ex.Message);
-                    return Results.Problem(ex.Message, "", (int)HttpStatusCode.InternalServerError);
+                    logger.LogWarning("GetTokenHandler: {Message}", ex.InnerException);
+                    return Results.Problem(ex.InnerException!.Message, "", (int)HttpStatusCode.InternalServerError);
                 }
             }
 

@@ -93,8 +93,8 @@ public class GetStableOrdersHistory : ICarterModule
                 }
                 catch (Exception ex)
                 {
-                    logger.LogWarning("GetStableOrdersHistory: {Message}", ex.Message);
-                    return Results.Problem(ex.Message, "", (int)HttpStatusCode.InternalServerError);
+                    logger.LogWarning("GetStableOrdersHistory: {Message}", ex.InnerException);
+                    return Results.Problem("Connection Error", "", (int)HttpStatusCode.InternalServerError);
                 }
             }
 

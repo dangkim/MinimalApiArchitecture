@@ -67,8 +67,8 @@ public class GetFSPrices : ICarterModule
                 }
                 catch (Exception ex)
                 {
-                    logger.LogWarning("GetFSPricesHandler: {0}", ex.Message);
-                    return Results.Problem(ex.Message, "", (int)HttpStatusCode.InternalServerError);
+                    logger.LogWarning("GetFSPricesHandler: {0}", ex.InnerException);
+                    return Results.Problem(ex.InnerException!.Message, "", (int)HttpStatusCode.InternalServerError);
                 }
             }
 

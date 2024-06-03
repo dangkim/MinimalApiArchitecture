@@ -66,8 +66,8 @@ public class GetStableOrderById : ICarterModule
                 }
                 catch (Exception ex)
                 {
-                    logger.LogWarning("GetStableOrderByIdHandler: {Message}", ex.Message);
-                    return Results.Problem(ex.Message, "", (int)HttpStatusCode.InternalServerError);
+                    logger.LogWarning("GetStableOrderByIdHandler: {Message}", ex.InnerException);
+                    return Results.Problem(ex.InnerException!.Message, "", (int)HttpStatusCode.InternalServerError);
                 }
             }
 

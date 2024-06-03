@@ -66,8 +66,8 @@ public class GetFSCountries : ICarterModule
                 }
                 catch (Exception ex)
                 {
-                    logger.LogWarning("GetFSCountriesHandler: {0}", ex.Message);
-                    return Results.Problem(ex.Message, "", (int)HttpStatusCode.InternalServerError);
+                    logger.LogWarning("GetFSCountriesHandler: {0}", ex.InnerException);
+                    return Results.Problem(ex.InnerException!.Message, "", (int)HttpStatusCode.InternalServerError);
                 }
             }
 

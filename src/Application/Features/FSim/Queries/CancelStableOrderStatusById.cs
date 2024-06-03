@@ -66,8 +66,8 @@ public class CancelStableOrderStatusById : ICarterModule
                 }
                 catch (Exception ex)
                 {
-                    logger.LogWarning("CancelStableOrderStatusByIdHandler: {Message}", ex.Message);
-                    return Results.Problem(ex.Message, "", (int)HttpStatusCode.InternalServerError);
+                    logger.LogWarning("CancelStableOrderStatusByIdHandler: {Message}", ex.InnerException);
+                    return Results.Problem(ex.InnerException!.Message, "", (int)HttpStatusCode.InternalServerError);
                 }
             }
 
