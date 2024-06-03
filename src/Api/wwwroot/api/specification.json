@@ -6,6 +6,16 @@
     "version": "v1"
   },
   "paths": {
+    "/api/getuserprofile": {
+      "get": {
+        "operationId": "GetUserProfile",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/products": {
       "get": {
         "tags": [

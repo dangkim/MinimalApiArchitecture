@@ -67,7 +67,7 @@ public class BuyActionNumber : ICarterModule
                 }
                 catch (Exception ex)
                 {
-                    logger.LogWarning("BuyActionNumberHandler: {0}", ex.InnerException);
+                    logger.LogWarning("BuyActionNumberHandler: {Message}", ex.InnerException);
                     return Results.Problem(ex.InnerException!.Message, "", (int)HttpStatusCode.InternalServerError);
                 }
             }
