@@ -16,6 +16,16 @@
         }
       }
     },
+    "/api/logout": {
+      "get": {
+        "operationId": "Logout",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/products": {
       "get": {
         "tags": [
