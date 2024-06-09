@@ -94,6 +94,7 @@ public class GetToken : ICarterModule
 
                             var cookieOptions = new CookieOptions
                             {
+                                Expires =  DateTimeOffset.UtcNow.AddDays(356),
                                 Secure = true,
                                 HttpOnly = true,
                                 SameSite = SameSiteMode.None
