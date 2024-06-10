@@ -23,6 +23,11 @@ builder.Services.AddHttpClient("SimApiClient", client =>
     client.BaseAddress = new Uri("https://localhost:44300/api/content/");
 });
 
+builder.Services.AddHttpClient("SimGraphClient", client =>
+{
+    client.BaseAddress = new Uri("https://localhost:44300/api/graphql");
+});
+
 builder.Services.Configure<CookiePolicyOptions>(options =>
 {
     options.MinimumSameSitePolicy = SameSiteMode.Lax;
