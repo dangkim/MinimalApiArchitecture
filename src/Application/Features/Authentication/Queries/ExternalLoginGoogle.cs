@@ -76,7 +76,7 @@ public class ExternalLoginGoogle : ICarterModule
 
                         var cookieOptions = new CookieOptions
                         {
-                            Expires = DateTimeOffset.UtcNow.AddDays(356),
+                            Expires = DateTimeOffset.UtcNow.AddDays(366),
                             Secure = true,
                             HttpOnly = true
                         };

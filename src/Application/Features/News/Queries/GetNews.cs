@@ -7,7 +7,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.SqlServer.Server;
 using MinimalApiArchitecture.Application.Helpers;
-using MinimalApiArchitecture.Application.Model;
 using System.IO;
 using System.Net;
 using System.Net.Http;

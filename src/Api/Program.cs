@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Net;
 using System.IO;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,6 +41,10 @@ builder.Services.Configure<CookiePolicyOptions>(options =>
 builder.Services.AddWebApiConfig();
 builder.Services.AddApplicationCore();
 builder.Services.AddPersistence(builder.Configuration);
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = "38.242.150.60:6379";
+});
 
 var app = builder.Build();
 app.UseCors(AppConstants.CorsPolicy);

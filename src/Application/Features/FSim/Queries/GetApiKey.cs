@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 using MinimalApiArchitecture.Application.Helpers;
-using MinimalApiArchitecture.Application.Model;
 
 
 namespace MinimalApiArchitecture.Application.Features.Authentication.Queries;

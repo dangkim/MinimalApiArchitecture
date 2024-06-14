@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MinimalApiArchitecture.Application.Helpers;
-using MinimalApiArchitecture.Application.Model;
 using System.IO;
 using System.Net;
 using System.Net.Http;

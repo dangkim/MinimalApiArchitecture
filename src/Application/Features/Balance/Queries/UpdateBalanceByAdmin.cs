@@ -17,7 +17,6 @@ using MinimalApiArchitecture.Application.Domain.Entities;
 using MinimalApiArchitecture.Application.Features.Products.EventHandlers;
 using MinimalApiArchitecture.Application.Helpers;
 using MinimalApiArchitecture.Application.Infrastructure.Persistence;
-using MinimalApiArchitecture.Application.Model;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;

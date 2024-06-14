@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Http;
-using MinimalApiArchitecture.Application.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,11 +16,11 @@ namespace MinimalApiArchitecture.Application.Helpers
             var authHeaderParts = httpContext!.Request.Headers.Authorization.ToString().Split(' ');
 
             var bearerValue = (authHeaderParts.Length == 2 && authHeaderParts[0] == "Bearer") ? authHeaderParts[1] : string.Empty;
-            var cookiesObject = httpContext!.Request.Cookies["stk"];
+            var access_token = httpContext!.Request.Cookies["stk"];
 
-            var tokenObject = httpContext!.Request.Cookies["stk"] == null ? new Token() : JsonSerializer.Deserialize<Token>(cookiesObject!);
+            //var tokenObject = cookiesString;//httpContext!.Request.Cookies["stk"] == null ? new Token() : JsonSerializer.Deserialize<Token>(cookiesString!);
 
-            var tokenString = string.IsNullOrEmpty(tokenObject!.access_token) ? bearerValue : tokenObject!.access_token;
+            var tokenString = string.IsNullOrEmpty(access_token) ? bearerValue : access_token;
         
             return tokenString;
         }

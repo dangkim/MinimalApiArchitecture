@@ -10,9 +10,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Identity.Client;
 using MinimalApiArchitecture.Application.Domain.Entities;
 using MinimalApiArchitecture.Application.Features.Products.EventHandlers;
 using MinimalApiArchitecture.Application.Helpers;
@@ -46,7 +48,7 @@ public class Register : ICarterModule
 
     }
 
-    public class RegisterHandler(IHttpContextAccessor httpContextAccessor, ILogger<RegisterHandler> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+    public class RegisterHandler(IDistributedCache cache, IHttpContextAccessor httpContextAccessor, ILogger<RegisterHandler> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
         : IRequestHandler<RegisterQuery, IResult>
     {
         public async Task<IResult> Handle(RegisterQuery request, CancellationToken cancellationToken)
@@ -59,6 +61,13 @@ public class Register : ICarterModule
             // Use IHttpClientFactory to create an instance of HttpClient
             var httpClient = httpClientFactory.CreateClient("SimApiClient");
             var httpTokenClient = httpClientFactory.CreateClient("SimTokenClient");
+
+            var cacheTokenKey = $"UserToken-{request.UserName}";
+
+            var cacheOptions = new DistributedCacheEntryOptions()
+                                                    .SetSlidingExpiration(TimeSpan.FromDays(366));
+
+            var cachedUserToken = await cache.GetStringAsync(cacheTokenKey, token: cancellationToken);
 
             // Create an instance of the request body
             var requestBody = new
@@ -88,7 +97,7 @@ public class Register : ICarterModule
                         var responseWithCookies = httpContextAccessor.HttpContext.Response;
 
                         // Read the response content as a string
-                        var responseData = await response.Content.ReadFromJsonAsync<object>(cancellationToken);
+                        var responseData = await response.Content.ReadFromJsonAsync<RegisterResponse>(cancellationToken);
 
                         // Get token
                         var formData = new Dictionary<string, string>
@@ -106,19 +115,28 @@ public class Register : ICarterModule
 
                         if (responseToken.IsSuccessStatusCode)
                         {
-                            string responseDataToken = await responseToken.Content.ReadAsStringAsync(cancellationToken);
+                            var responseTokenData = await responseToken.Content.ReadFromJsonAsync<ResponseTokenData>(cancellationToken: cancellationToken);//.ReadAsStringAsync(cancellationToken);
 
                             var cookieOptions = new CookieOptions
                             {
-                                Expires = DateTimeOffset.UtcNow.AddDays(356),
+                                Expires = DateTimeOffset.UtcNow.AddDays(366),
                                 Secure = true,
                                 HttpOnly = true,
                                 SameSite = SameSiteMode.None
                             };
 
-                            responseWithCookies.Cookies.Append("stk", responseDataToken, cookieOptions);
+                            responseWithCookies.Cookies.Append("stk", responseTokenData.Access_token, cookieOptions);
 
-                            return Results.Ok(responseData);
+                            var tokenList = string.IsNullOrEmpty(cachedUserToken)
+                                            ? []
+                                            : JsonSerializer.Deserialize<List<string>>(cachedUserToken) ?? [];
+
+                            if (!tokenList.Contains(responseTokenData.Access_token))
+                            {
+                                tokenList.Add(responseTokenData.Access_token);
+                                var serializedTokenList = JsonSerializer.Serialize(tokenList);
+                                await cache.SetStringAsync(cacheTokenKey, serializedTokenList, cacheOptions, token: cancellationToken);
+                            }
                         }
 
                         return Results.Ok(responseData);
@@ -143,8 +161,50 @@ public class Register : ICarterModule
 
     public class RegisterResponse
     {
-        public int CategoryId { get; set; }
-        public string? Name { get; set; }
+        public int ProfileId { get; set; }
+
+        public string Email { get; set; }
+
+        public long UserId { get; set; }
+
+        public string UserName { get; set; }
+
+        public object Vendor { get; set; }
+
+        public object DefaultForwardingNumber { get; set; }
+
+        public int Balance { get; set; }
+
+        public object Currency { get; set; }
+
+        public int OriginalAmount { get; set; }
+
+        public int Amount { get; set; }
+
+        public int RateInUsd { get; set; }
+
+        public object GmailMsgId { get; set; }
+
+        public int Rating { get; set; }
+
+        public object DefaultCoutryName { get; set; }
+
+        public object DefaultIso { get; set; }
+
+        public object DefaultPrefix { get; set; }
+
+        public object DefaultOperatorName { get; set; }
+
+        public int FrozenBalance { get; set; }
+
+        public object TokenApi { get; set; }
+    }
+
+    public class ResponseTokenData
+    {
+        public string Access_token { get; set; }
+        public string? Token_type { get; set; }
+        public long? Expires_in { get; set; }
     }
 
 }

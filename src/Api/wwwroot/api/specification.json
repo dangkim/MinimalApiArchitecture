@@ -218,6 +218,16 @@
         }
       }
     },
+    "/api/refreshToken": {
+      "get": {
+        "operationId": "RefreshToken",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/register": {
       "post": {
         "operationId": "Register",
@@ -236,24 +246,6 @@
         "responses": {
           "200": {
             "description": ""
-          }
-        }
-      }
-    },
-    "/api/revokeToken": {
-      "get": {
-        "operationId": "RevokeToken",
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/octet-stream": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              }
-            }
           }
         }
       }
