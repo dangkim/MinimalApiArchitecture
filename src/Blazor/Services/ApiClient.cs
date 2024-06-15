@@ -67,11 +67,11 @@ namespace MinimalApiArchitecture.Api
         System.Threading.Tasks.Task GetUserProfileAsync(System.Threading.CancellationToken cancellationToken);
 
         /// <exception cref="SwaggerException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task LogoutAsync();
+        System.Threading.Tasks.Task LogoutAsync(LogoutQuery query);
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <exception cref="SwaggerException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task LogoutAsync(System.Threading.CancellationToken cancellationToken);
+        System.Threading.Tasks.Task LogoutAsync(LogoutQuery query, System.Threading.CancellationToken cancellationToken);
 
         /// <exception cref="SwaggerException">A server side error occurred.</exception>
         System.Threading.Tasks.Task<System.Collections.Generic.ICollection<GetCategoriesResponse>> GetCategoriesAsync();
@@ -102,11 +102,11 @@ namespace MinimalApiArchitecture.Api
         System.Threading.Tasks.Task GoogleRegisterAsync(System.Threading.CancellationToken cancellationToken);
 
         /// <exception cref="SwaggerException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task RefreshTokenAsync();
+        System.Threading.Tasks.Task RefreshTokenAsync(RevokeTokenQuery query);
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <exception cref="SwaggerException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task RefreshTokenAsync(System.Threading.CancellationToken cancellationToken);
+        System.Threading.Tasks.Task RefreshTokenAsync(RevokeTokenQuery query, System.Threading.CancellationToken cancellationToken);
 
         /// <exception cref="SwaggerException">A server side error occurred.</exception>
         System.Threading.Tasks.Task RegisterAsync(RegisterQuery query);
@@ -738,22 +738,29 @@ namespace MinimalApiArchitecture.Api
         }
 
         /// <exception cref="SwaggerException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task LogoutAsync()
+        public virtual System.Threading.Tasks.Task LogoutAsync(LogoutQuery query)
         {
-            return LogoutAsync(System.Threading.CancellationToken.None);
+            return LogoutAsync(query, System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <exception cref="SwaggerException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task LogoutAsync(System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task LogoutAsync(LogoutQuery query, System.Threading.CancellationToken cancellationToken)
         {
+            if (query == null)
+                throw new System.ArgumentNullException("query");
+
             var client_ = _httpClient;
             var disposeClient_ = false;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
-                    request_.Method = new System.Net.Http.HttpMethod("GET");
+                    var json_ = Newtonsoft.Json.JsonConvert.SerializeObject(query, _settings.Value);
+                    var content_ = new System.Net.Http.StringContent(json_);
+                    content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
+                    request_.Content = content_;
+                    request_.Method = new System.Net.Http.HttpMethod("POST");
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                     if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
@@ -1102,22 +1109,29 @@ namespace MinimalApiArchitecture.Api
         }
 
         /// <exception cref="SwaggerException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task RefreshTokenAsync()
+        public virtual System.Threading.Tasks.Task RefreshTokenAsync(RevokeTokenQuery query)
         {
-            return RefreshTokenAsync(System.Threading.CancellationToken.None);
+            return RefreshTokenAsync(query, System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <exception cref="SwaggerException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task RefreshTokenAsync(System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task RefreshTokenAsync(RevokeTokenQuery query, System.Threading.CancellationToken cancellationToken)
         {
+            if (query == null)
+                throw new System.ArgumentNullException("query");
+
             var client_ = _httpClient;
             var disposeClient_ = false;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
-                    request_.Method = new System.Net.Http.HttpMethod("GET");
+                    var json_ = Newtonsoft.Json.JsonConvert.SerializeObject(query, _settings.Value);
+                    var content_ = new System.Net.Http.StringContent(json_);
+                    content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
+                    request_.Content = content_;
+                    request_.Method = new System.Net.Http.HttpMethod("POST");
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                     if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
@@ -2897,6 +2911,65 @@ namespace MinimalApiArchitecture.Api
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class LogoutQuery : System.ComponentModel.INotifyPropertyChanged
+    {
+        private string _email;
+        private long? _userId;
+
+        [Newtonsoft.Json.JsonProperty("email", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string Email
+        {
+            get { return _email; }
+
+            set
+            {
+                if (_email != value)
+                {
+                    _email = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        [Newtonsoft.Json.JsonProperty("userId", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public long? UserId
+        {
+            get { return _userId; }
+
+            set
+            {
+                if (_userId != value)
+                {
+                    _userId = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        public string ToJson()
+        {
+
+            return Newtonsoft.Json.JsonConvert.SerializeObject(this, new Newtonsoft.Json.JsonSerializerSettings());
+
+        }
+        public static LogoutQuery FromJson(string data)
+        {
+
+            return Newtonsoft.Json.JsonConvert.DeserializeObject<LogoutQuery>(data, new Newtonsoft.Json.JsonSerializerSettings());
+
+        }
+
+        public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void RaisePropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string propertyName = null)
+        {
+            var handler = PropertyChanged;
+            if (handler != null)
+                handler(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
+        }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class GetCategoriesResponse : System.ComponentModel.INotifyPropertyChanged
     {
         private int _categoryId;
@@ -3001,6 +3074,49 @@ namespace MinimalApiArchitecture.Api
         {
 
             return Newtonsoft.Json.JsonConvert.DeserializeObject<GetTokenQuery>(data, new Newtonsoft.Json.JsonSerializerSettings());
+
+        }
+
+        public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void RaisePropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string propertyName = null)
+        {
+            var handler = PropertyChanged;
+            if (handler != null)
+                handler(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
+        }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class RevokeTokenQuery : System.ComponentModel.INotifyPropertyChanged
+    {
+        private string _email;
+
+        [Newtonsoft.Json.JsonProperty("email", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string Email
+        {
+            get { return _email; }
+
+            set
+            {
+                if (_email != value)
+                {
+                    _email = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        public string ToJson()
+        {
+
+            return Newtonsoft.Json.JsonConvert.SerializeObject(this, new Newtonsoft.Json.JsonSerializerSettings());
+
+        }
+        public static RevokeTokenQuery FromJson(string data)
+        {
+
+            return Newtonsoft.Json.JsonConvert.DeserializeObject<RevokeTokenQuery>(data, new Newtonsoft.Json.JsonSerializerSettings());
 
         }
 

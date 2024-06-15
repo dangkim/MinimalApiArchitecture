@@ -1,25 +1,15 @@
-﻿using AutoMapper;
-using AutoMapper.QueryableExtensions;
-using Carter;
+﻿using Carter;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MinimalApiArchitecture.Application.Domain.Entities;
-using MinimalApiArchitecture.Application.Features.Products.EventHandlers;
 using MinimalApiArchitecture.Application.Helpers;
-using MinimalApiArchitecture.Application.Infrastructure.Persistence;
+using MinimalApiArchitecture.Application.Model;
 using System.Net;
-using System.Net.Http;
 using System.Net.Http.Json;
-using System.Text;
 using System.Text.Json;
 
 namespace MinimalApiArchitecture.Application.Features.Authentication.Queries;
@@ -29,16 +19,16 @@ public class RefreshToken : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        app.MapGet("api/refreshToken", (IMediator mediator) =>
+        app.MapPost("api/refreshToken", (IMediator mediator, RevokeTokenQuery query) =>
         {
-            return mediator.Send(new RevokeTokenQuery());
+            return mediator.Send(query);
         })
         .WithName(nameof(RefreshToken));
     }
 
     public class RevokeTokenQuery : IRequest<IResult>
     {
-        public string? UserName { get; set; }
+        public string? Email { get; set; }
     }
 
     public class RevokeTokenHandler(IDistributedCache cache, IHttpContextAccessor httpContextAccessor, ILogger<RevokeTokenHandler> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
@@ -49,6 +39,13 @@ public class RefreshToken : ICarterModule
         {
             try
             {
+                var cacheTokenKey = $"UserToken-{request.Email}";
+
+                var cachedUserToken = await cache.GetStringAsync(cacheTokenKey, token: cancellationToken);
+
+                var cacheOptions = new DistributedCacheEntryOptions()
+                                                    .SetSlidingExpiration(TimeSpan.FromDays(366));
+
                 var httpTokenClient = httpClientFactory.CreateClient("SimTokenClient");
 
                 var httpContext = httpContextAccessor.HttpContext!;
@@ -60,32 +57,49 @@ public class RefreshToken : ICarterModule
                     return validationResult;
                 }
 
-                var cacheTokenKey = $"UserToken-{request.UserName}";
+                // RefreshToken
+                var formDataRefreshToken = new Dictionary<string, string>
+                                        {
+                                            { "grant_type", "refresh_token" },
+                                            { "client_id", configuration["client_id"] },
+                                            { "client_secret", configuration["client_secret"] },
+                                            { "refresh_token", tokenString }
+                                        };
 
-                var cachedUserToken = await cache.GetStringAsync(cacheTokenKey, token: cancellationToken);
+                var content = new FormUrlEncodedContent(formDataRefreshToken);
 
-                var cachedListToken = JsonSerializer.Deserialize<List<string>>(cachedUserToken!);
+                using var responseTokenData = await httpTokenClient.PostAsync("token", content, cancellationToken);
 
-                foreach (var item in cachedListToken!)
+                var responeRefreshToken = await responseTokenData.Content.ReadFromJsonAsync<ResponseTokenData>(cancellationToken: cancellationToken);
+
+                // Remove old token
+                var tokenList = string.IsNullOrEmpty(cachedUserToken)
+                                            ? []
+                                            : JsonSerializer.Deserialize<List<string>>(cachedUserToken) ?? [];
+
+                if (!tokenList.Contains(tokenString))
+                {
+                    tokenList.Add(tokenString);
+                }
+
+                foreach (var token in tokenList)
                 {
                     var formData = new Dictionary<string, string>
                                         {
                                             { "client_id", configuration["client_id"] },
                                             { "client_secret", configuration["client_secret"] },
-                                            { "token", item }
+                                            { "token", token }
                                         };
 
-                    var content = new FormUrlEncodedContent(formData);
+                    var contentRemoveToken = new FormUrlEncodedContent(formData);
 
-                    // Send a POST request with the HttpContent
-                    var response = await httpTokenClient.PostAsync("revoke", content, cancellationToken);
+                    await httpTokenClient.PostAsync("revoke", content, cancellationToken);
                 }
 
-                var responseWithCookies = httpContextAccessor.HttpContext.Response;
-
-                responseWithCookies.Cookies.Delete("stk");
-
-                //string responseData = await response.Content.ReadAsStringAsync(cancellationToken);
+                tokenList.Clear();
+                tokenList.Add(responeRefreshToken.Access_token);
+                var serializedTokenList = JsonSerializer.Serialize(tokenList);
+                await cache.SetStringAsync(cacheTokenKey, serializedTokenList, cacheOptions, cancellationToken);
 
                 return Results.Ok(true);
 
@@ -96,11 +110,5 @@ public class RefreshToken : ICarterModule
                 return Results.Problem(ex.InnerException!.Message, "", (int)HttpStatusCode.InternalServerError);
             }
         }
-    }
-
-    public class RevokeTokenResponse
-    {
-        public int CategoryId { get; set; }
-        public string? Name { get; set; }
     }
 }

@@ -22,12 +22,12 @@ export interface IClient {
     deleteProduct(productId: number): Observable<void>;
     getNews(): Observable<void>;
     getUserProfile(): Observable<void>;
-    logout(): Observable<void>;
+    logout(query: LogoutQuery): Observable<void>;
     getCategories(): Observable<GetCategoriesResponse[]>;
     externalLoginGoogle(): Observable<void>;
     getToken(query: GetTokenQuery): Observable<void>;
     googleRegister(): Observable<void>;
-    refreshToken(): Observable<void>;
+    refreshToken(query: RevokeTokenQuery): Observable<void>;
     register(query: RegisterQuery): Observable<void>;
     updateBalanceByAdmin(query: UpdateBalanceByAdminQuery): Observable<void>;
     banStableOrderStatusById(orderId: string | null): Observable<void>;
@@ -362,18 +362,22 @@ export class Client implements IClient {
         return _observableOf<void>(null as any);
     }
 
-    logout(): Observable<void> {
+    logout(query: LogoutQuery): Observable<void> {
         let url_ = this.baseUrl + "/api/logout";
         url_ = url_.replace(/[?&]$/, "");
 
+        const content_ = JSON.stringify(query);
+
         let options_ : any = {
+            body: content_,
             observe: "response",
             responseType: "blob",
             headers: new HttpHeaders({
+                "Content-Type": "application/json",
             })
         };
 
-        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
             return this.processLogout(response_);
         })).pipe(_observableCatch((response_: any) => {
             if (response_ instanceof HttpResponseBase) {
@@ -597,18 +601,22 @@ export class Client implements IClient {
         return _observableOf<void>(null as any);
     }
 
-    refreshToken(): Observable<void> {
+    refreshToken(query: RevokeTokenQuery): Observable<void> {
         let url_ = this.baseUrl + "/api/refreshToken";
         url_ = url_.replace(/[?&]$/, "");
 
+        const content_ = JSON.stringify(query);
+
         let options_ : any = {
+            body: content_,
             observe: "response",
             responseType: "blob",
             headers: new HttpHeaders({
+                "Content-Type": "application/json",
             })
         };
 
-        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
             return this.processRefreshToken(response_);
         })).pipe(_observableCatch((response_: any) => {
             if (response_ instanceof HttpResponseBase) {
@@ -1685,6 +1693,46 @@ export interface IUpdateProductCommand {
     categoryId?: number;
 }
 
+export class LogoutQuery implements ILogoutQuery {
+    email?: string | undefined;
+    userId?: number | undefined;
+
+    constructor(data?: ILogoutQuery) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.email = _data["email"];
+            this.userId = _data["userId"];
+        }
+    }
+
+    static fromJS(data: any): LogoutQuery {
+        data = typeof data === 'object' ? data : {};
+        let result = new LogoutQuery();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["email"] = this.email;
+        data["userId"] = this.userId;
+        return data;
+    }
+}
+
+export interface ILogoutQuery {
+    email?: string | undefined;
+    userId?: number | undefined;
+}
+
 export class GetCategoriesResponse implements IGetCategoriesResponse {
     categoryId?: number;
     name?: string | undefined;
@@ -1763,6 +1811,42 @@ export class GetTokenQuery implements IGetTokenQuery {
 export interface IGetTokenQuery {
     userName?: string;
     password?: string;
+}
+
+export class RevokeTokenQuery implements IRevokeTokenQuery {
+    email?: string | undefined;
+
+    constructor(data?: IRevokeTokenQuery) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.email = _data["email"];
+        }
+    }
+
+    static fromJS(data: any): RevokeTokenQuery {
+        data = typeof data === 'object' ? data : {};
+        let result = new RevokeTokenQuery();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["email"] = this.email;
+        return data;
+    }
+}
+
+export interface IRevokeTokenQuery {
+    email?: string | undefined;
 }
 
 export class RegisterQuery implements IRegisterQuery {

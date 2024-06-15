@@ -1,24 +1,17 @@
-﻿using AutoMapper;
-using AutoMapper.QueryableExtensions;
-using Azure;
-using Carter;
+﻿using Carter;
 using MediatR;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MinimalApiArchitecture.Application.Infrastructure.Persistence;
 using System.Net;
 using System.Text.Json;
 using System.Text;
-using System.Net.Http;
+using System.Net.Http.Json;
+using MinimalApiArchitecture.Application.Model;
 
 namespace MinimalApiArchitecture.Application.Features.Authentication.Queries;
 
@@ -70,7 +63,7 @@ public class ExternalLoginGoogle : ICarterModule
                     // Check if the request was successful
                     if (response.IsSuccessStatusCode)
                     {
-                        string responseData = await response.Content.ReadAsStringAsync(cancellationToken);
+                        var responseData = await response.Content.ReadFromJsonAsync<ResponseTokenData>(cancellationToken: cancellationToken);//.ReadAsStringAsync(cancellationToken);
 
                         var responseWithCookies = httpContextAccessor.HttpContext.Response;
 
@@ -81,7 +74,7 @@ public class ExternalLoginGoogle : ICarterModule
                             HttpOnly = true
                         };
 
-                        responseWithCookies.Cookies.Append("stk", responseData, cookieOptions);
+                        responseWithCookies.Cookies.Append("stk", responseData.Access_token, cookieOptions);
 
                         return Results.Redirect(configuration["simfrontendurl"]!);
                     }
@@ -103,12 +96,4 @@ public class ExternalLoginGoogle : ICarterModule
         }
 
     }
-
-    public class TokenResponse
-    {
-        public string Access_token { get; set; }
-        public string Token_type { get; set; }
-        public long Expires_in { get; set; }
-    }
-
 }

@@ -3,8 +3,10 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Identity.Client;
 using MinimalApiArchitecture.Application.Helpers;
 using System.IO;
 using System.Net;
@@ -20,24 +22,30 @@ public class Logout : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        app.MapGet("api/logout", (IMediator mediator) =>
+        app.MapPost("api/logout", (IMediator mediator, LogoutQuery query) =>
         {
-            return mediator.Send(new LogoutQuery { });
+            return mediator.Send(query);
         })
         .WithName(nameof(Logout));
     }
 
     public class LogoutQuery : IRequest<IResult>
     {
+        public string? Email { get; set; }
+        public long? UserId { get; set; }
     }
 
-    public class LogoutHandler(IHttpContextAccessor httpContextAccessor, ILogger<LogoutHandler> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+    public class LogoutHandler(IDistributedCache cache, IHttpContextAccessor httpContextAccessor, ILogger<LogoutHandler> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
         : IRequestHandler<LogoutQuery, IResult>
     {
         public async Task<IResult> Handle(LogoutQuery request, CancellationToken cancellationToken)
         {
             try
             {
+                var cacheTokenKey = $"UserToken-{request.Email}";
+
+                var cachedUserToken = await cache.GetStringAsync(cacheTokenKey, token: cancellationToken);
+
                 var httpTokenClient = httpClientFactory.CreateClient("SimTokenClient");
 
                 var httpContext = httpContextAccessor.HttpContext!;
@@ -49,25 +57,38 @@ public class Logout : ICarterModule
                     return validationResult;
                 }
 
-                var formData = new Dictionary<string, string>
+                var tokenList = string.IsNullOrEmpty(cachedUserToken)
+                                            ? []
+                                            : JsonSerializer.Deserialize<List<string>>(cachedUserToken) ?? [];
+
+                if (!tokenList.Contains(tokenString))
+                {
+                    tokenList.Add(tokenString);
+                }
+
+                foreach (var token in tokenList)
+                {
+                    var formData = new Dictionary<string, string>
                                         {
                                             { "client_id", configuration["client_id"] },
                                             { "client_secret", configuration["client_secret"] },
-                                            { "token", tokenString }
+                                            { "token", token }
                                         };
 
-                var content = new FormUrlEncodedContent(formData);
+                    var content = new FormUrlEncodedContent(formData);
 
-                // Send a POST request with the HttpContent
-                HttpResponseMessage response = await httpTokenClient.PostAsync("revoke", content, cancellationToken);
+                    await httpTokenClient.PostAsync("revoke", content, cancellationToken);
+                }
+
+                tokenList.Clear();
+                var serializedTokenList = JsonSerializer.Serialize(tokenList);
+                await cache.SetStringAsync(cacheTokenKey, serializedTokenList, cancellationToken);
 
                 var responseWithCookies = httpContextAccessor.HttpContext.Response;
 
                 responseWithCookies.Cookies.Delete("stk");
 
-                string responseData = await response.Content.ReadAsStringAsync(cancellationToken);
-
-                return Results.Ok(responseData);
+                return Results.Ok(true);
 
             }
             catch (Exception ex)

@@ -1,30 +1,18 @@
-﻿using AutoMapper;
-using AutoMapper.QueryableExtensions;
-using Carter;
+﻿using Carter;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MinimalApiArchitecture.Application.Domain.Entities;
-using MinimalApiArchitecture.Application.Features.Products.EventHandlers;
 using MinimalApiArchitecture.Application.Helpers;
-using MinimalApiArchitecture.Application.Infrastructure.Persistence;
+using MinimalApiArchitecture.Application.Model;
 using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Cryptography.Xml;
 using System.Text;
 using System.Text.Json;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MinimalApiArchitecture.Application.Features.Authentication.Queries;
 
@@ -143,12 +131,4 @@ public class GetToken : ICarterModule
         public string? Email { get; set; }
         public long? UserId { get; set; }
     }
-
-    public class ResponseTokenData
-    {
-        public string? Access_token { get; set; }
-        public string? Token_type { get; set; }
-        public long? Expires_in { get; set; }
-    }
-
 }

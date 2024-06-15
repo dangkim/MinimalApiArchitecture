@@ -144,8 +144,20 @@
       }
     },
     "/api/logout": {
-      "get": {
+      "post": {
         "operationId": "Logout",
+        "requestBody": {
+          "x-name": "query",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogoutQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
         "responses": {
           "200": {
             "description": ""
@@ -219,8 +231,20 @@
       }
     },
     "/api/refreshToken": {
-      "get": {
+      "post": {
         "operationId": "RefreshToken",
+        "requestBody": {
+          "x-name": "query",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevokeTokenQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
         "responses": {
           "200": {
             "description": ""
@@ -823,6 +847,21 @@
           }
         }
       },
+      "LogoutQuery": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "userId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          }
+        }
+      },
       "GetCategoriesResponse": {
         "type": "object",
         "additionalProperties": false,
@@ -846,6 +885,16 @@
           },
           "password": {
             "type": "string"
+          }
+        }
+      },
+      "RevokeTokenQuery": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
