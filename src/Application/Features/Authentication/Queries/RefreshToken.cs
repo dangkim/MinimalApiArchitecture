@@ -70,38 +70,55 @@ public class RefreshToken : ICarterModule
 
                 using var responseTokenData = await httpTokenClient.PostAsync("token", content, cancellationToken);
 
-                var responeRefreshToken = await responseTokenData.Content.ReadFromJsonAsync<ResponseTokenData>(cancellationToken: cancellationToken);
-
-                // Remove old token
-                var tokenList = string.IsNullOrEmpty(cachedUserToken)
-                                            ? []
-                                            : JsonSerializer.Deserialize<List<string>>(cachedUserToken) ?? [];
-
-                if (!tokenList.Contains(tokenString))
+                if (responseTokenData.IsSuccessStatusCode)
                 {
-                    tokenList.Add(tokenString);
-                }
+                    var responeRefreshToken = await responseTokenData.Content.ReadFromJsonAsync<ResponseTokenData>(cancellationToken: cancellationToken);
 
-                foreach (var token in tokenList)
-                {
-                    var formData = new Dictionary<string, string>
+                    var responseWithCookies = httpContext.Response;
+
+                    var cookieOptions = new CookieOptions
+                    {
+                        Expires = DateTimeOffset.UtcNow.AddDays(366),
+                        Secure = true,
+                        HttpOnly = true,
+                        SameSite = SameSiteMode.None
+                    };
+
+                    responseWithCookies.Cookies.Append("stk", responeRefreshToken.Access_token, cookieOptions);
+
+                    // Remove old token
+                    var tokenList = string.IsNullOrEmpty(cachedUserToken)
+                                                ? []
+                                                : JsonSerializer.Deserialize<List<string>>(cachedUserToken) ?? [];
+
+                    if (!tokenList.Contains(tokenString))
+                    {
+                        tokenList.Add(tokenString);
+                    }
+
+                    foreach (var token in tokenList)
+                    {
+                        var formData = new Dictionary<string, string>
                                         {
                                             { "client_id", configuration["client_id"] },
                                             { "client_secret", configuration["client_secret"] },
                                             { "token", token }
                                         };
 
-                    var contentRemoveToken = new FormUrlEncodedContent(formData);
+                        var contentRemoveToken = new FormUrlEncodedContent(formData);
 
-                    await httpTokenClient.PostAsync("revoke", content, cancellationToken);
+                        await httpTokenClient.PostAsync("revoke", content, cancellationToken);
+                    }
+
+                    tokenList.Clear();
+                    tokenList.Add(responeRefreshToken.Access_token);
+                    var serializedTokenList = JsonSerializer.Serialize(tokenList);
+                    await cache.SetStringAsync(cacheTokenKey, serializedTokenList, cacheOptions, cancellationToken);
+
+                    return Results.Ok(true);
                 }
 
-                tokenList.Clear();
-                tokenList.Add(responeRefreshToken.Access_token);
-                var serializedTokenList = JsonSerializer.Serialize(tokenList);
-                await cache.SetStringAsync(cacheTokenKey, serializedTokenList, cacheOptions, cancellationToken);
-
-                return Results.Ok(true);
+                return Results.Ok(false);
 
             }
             catch (Exception ex)
