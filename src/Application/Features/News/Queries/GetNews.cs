@@ -3,10 +3,12 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.SqlServer.Server;
 using MinimalApiArchitecture.Application.Helpers;
+using MinimalApiArchitecture.Application.Model;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -33,26 +35,53 @@ public class GetNews : ICarterModule
     {
     }
 
-    public class GetNewsHandler(IHttpContextAccessor httpContextAccessor, ILogger<GetNewsHandler> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+    public class GetNewsHandler(IDistributedCache cache, IHttpContextAccessor httpContextAccessor, ILogger<GetNewsHandler> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
         : IRequestHandler<GetNewsQuery, IResult>
     {
         public async Task<IResult> Handle(GetNewsQuery request, CancellationToken cancellationToken)
         {
             try
             {
+                var userName = configuration["usernamenews"];
+                var password = configuration["passwordnews"];
+
+                var cacheTokenKey = $"UserToken-{userName}";
+
+                var cacheOptions = new DistributedCacheEntryOptions()
+                                                        .SetSlidingExpiration(TimeSpan.FromDays(366));
+
+                var cachedToken = await cache.GetStringAsync(cacheTokenKey, cancellationToken);
+
                 var httpClient = httpClientFactory.CreateClient("SimGraphClient");
 
-                var httpContext = httpContextAccessor.HttpContext!;
+                var httpTokenClient = httpClientFactory.CreateClient("SimTokenClient");
 
-                var tokenString = ValidateTokenHelper.ValidateAndExtractToken(httpContext, out IResult? validationResult);
-
-                if (validationResult != null)
+                using (httpTokenClient)
                 {
-                    return validationResult;
-                }
+                    if (string.IsNullOrEmpty(cachedToken))
+                    {
+                        var formData = new Dictionary<string, string>
+                                        {
+                                            { "grant_type", "password" },
+                                            { "client_id", configuration["client_id"] },
+                                            { "client_secret", configuration["client_secret"] },
+                                            { "username", userName },
+                                            { "password", password }
+                                        };
 
-                using (httpClient)
-                {
+                        var content = new FormUrlEncodedContent(formData);                        
+
+                        using var responseToken = await httpTokenClient.PostAsync("token", content, cancellationToken);
+
+                        if (responseToken.IsSuccessStatusCode)
+                        {
+                            cachedToken = (await responseToken.Content.ReadFromJsonAsync<ResponseTokenData>(cancellationToken)).Access_token;
+
+                            await cache.SetStringAsync(cacheTokenKey, cachedToken, cacheOptions, cancellationToken);
+                        }
+                        
+                    }
+
                     var payload = new
                     {
                         query = @"
@@ -70,7 +99,7 @@ public class GetNews : ICarterModule
 
                     using StringContent jsonContent = new(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
 
-                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenString);
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", cachedToken);
 
                     using var response = await httpClient.PostAsync("", jsonContent, cancellationToken);
 
