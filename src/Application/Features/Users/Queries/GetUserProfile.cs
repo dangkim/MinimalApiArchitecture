@@ -22,7 +22,7 @@ public class GetUserProfile : ICarterModule
     {
         app.MapGet("api/getuserprofile", (IMediator mediator) =>
         {
-            return mediator.Send(new GetUserProfileQuery {});
+            return mediator.Send(new GetUserProfileQuery { });
         })
         .WithName(nameof(GetUserProfile));
     }
@@ -55,7 +55,7 @@ public class GetUserProfile : ICarterModule
 
                     using var response = await httpClient.GetAsync("profile", cancellationToken);
 
-                    var responseData = await response.Content.ReadFromJsonAsync<object>(cancellationToken);
+                    var responseData = await response.Content.ReadFromJsonAsync<UserProfileResponse>(cancellationToken);
 
                     return Results.Ok(responseData);
                 }
@@ -68,5 +68,11 @@ public class GetUserProfile : ICarterModule
 
         }
 
+        public class UserProfileResponse
+        {
+            public decimal Balance { get; set; }
+            public string? Email { get; set; }
+            public long? UserId { get; set; }
+        }
     }
 }

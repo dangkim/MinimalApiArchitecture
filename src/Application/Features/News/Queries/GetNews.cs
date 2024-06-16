@@ -42,10 +42,10 @@ public class GetNews : ICarterModule
         {
             try
             {
-                var userName = configuration["usernamenews"];
-                var password = configuration["passwordnews"];
+                var userName = configuration["usernamengraph"];
+                var password = configuration["passwordgraph"];
 
-                var cacheTokenKey = $"UserToken-{userName}";
+                var cacheTokenKey = $"UserGraph-{userName}";
 
                 var cacheOptions = new DistributedCacheEntryOptions()
                                                         .SetSlidingExpiration(TimeSpan.FromDays(366));

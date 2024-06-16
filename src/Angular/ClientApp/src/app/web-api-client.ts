@@ -20,10 +20,11 @@ export interface IClient {
     createProduct(command: CreateProductCommand): Observable<void>;
     updateProduct(command: UpdateProductCommand): Observable<void>;
     deleteProduct(productId: number): Observable<void>;
+    getCategories(): Observable<GetCategoriesResponse[]>;
+    getBanks(): Observable<void>;
     getNews(): Observable<void>;
     getUserProfile(): Observable<void>;
     logout(query: LogoutQuery): Observable<void>;
-    getCategories(): Observable<GetCategoriesResponse[]>;
     externalLoginGoogle(): Observable<void>;
     getToken(query: GetTokenQuery): Observable<void>;
     googleRegister(): Observable<void>;
@@ -274,6 +275,105 @@ export class Client implements IClient {
         return _observableOf<void>(null as any);
     }
 
+    getCategories(): Observable<GetCategoriesResponse[]> {
+        let url_ = this.baseUrl + "/api/categories";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetCategories(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetCategories(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<GetCategoriesResponse[]>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<GetCategoriesResponse[]>;
+        }));
+    }
+
+    protected processGetCategories(response: HttpResponseBase): Observable<GetCategoriesResponse[]> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(GetCategoriesResponse.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
+            return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf<GetCategoriesResponse[]>(null as any);
+    }
+
+    getBanks(): Observable<void> {
+        let url_ = this.baseUrl + "/api/getallbanks";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetBanks(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetBanks(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processGetBanks(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
+            return _observableOf<void>(null as any);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf<void>(null as any);
+    }
+
     getNews(): Observable<void> {
         let url_ = this.baseUrl + "/api/getallnews";
         url_ = url_.replace(/[?&]$/, "");
@@ -408,61 +508,6 @@ export class Client implements IClient {
             }));
         }
         return _observableOf<void>(null as any);
-    }
-
-    getCategories(): Observable<GetCategoriesResponse[]> {
-        let url_ = this.baseUrl + "/api/categories";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_ : any = {
-            observe: "response",
-            responseType: "blob",
-            headers: new HttpHeaders({
-                "Accept": "application/json"
-            })
-        };
-
-        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
-            return this.processGetCategories(response_);
-        })).pipe(_observableCatch((response_: any) => {
-            if (response_ instanceof HttpResponseBase) {
-                try {
-                    return this.processGetCategories(response_ as any);
-                } catch (e) {
-                    return _observableThrow(e) as any as Observable<GetCategoriesResponse[]>;
-                }
-            } else
-                return _observableThrow(response_) as any as Observable<GetCategoriesResponse[]>;
-        }));
-    }
-
-    protected processGetCategories(response: HttpResponseBase): Observable<GetCategoriesResponse[]> {
-        const status = response.status;
-        const responseBlob =
-            response instanceof HttpResponse ? response.body :
-            (response as any).error instanceof Blob ? (response as any).error : undefined;
-
-        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 200) {
-            return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            if (Array.isArray(resultData200)) {
-                result200 = [] as any;
-                for (let item of resultData200)
-                    result200!.push(GetCategoriesResponse.fromJS(item));
-            }
-            else {
-                result200 = <any>null;
-            }
-            return _observableOf(result200);
-            }));
-        } else if (status !== 200 && status !== 204) {
-            return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            }));
-        }
-        return _observableOf<GetCategoriesResponse[]>(null as any);
     }
 
     externalLoginGoogle(): Observable<void> {
@@ -1693,46 +1738,6 @@ export interface IUpdateProductCommand {
     categoryId?: number;
 }
 
-export class LogoutQuery implements ILogoutQuery {
-    email?: string | undefined;
-    userId?: number | undefined;
-
-    constructor(data?: ILogoutQuery) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (<any>this)[property] = (<any>data)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.email = _data["email"];
-            this.userId = _data["userId"];
-        }
-    }
-
-    static fromJS(data: any): LogoutQuery {
-        data = typeof data === 'object' ? data : {};
-        let result = new LogoutQuery();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["email"] = this.email;
-        data["userId"] = this.userId;
-        return data;
-    }
-}
-
-export interface ILogoutQuery {
-    email?: string | undefined;
-    userId?: number | undefined;
-}
-
 export class GetCategoriesResponse implements IGetCategoriesResponse {
     categoryId?: number;
     name?: string | undefined;
@@ -1771,6 +1776,46 @@ export class GetCategoriesResponse implements IGetCategoriesResponse {
 export interface IGetCategoriesResponse {
     categoryId?: number;
     name?: string | undefined;
+}
+
+export class LogoutQuery implements ILogoutQuery {
+    email?: string | undefined;
+    userId?: number | undefined;
+
+    constructor(data?: ILogoutQuery) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.email = _data["email"];
+            this.userId = _data["userId"];
+        }
+    }
+
+    static fromJS(data: any): LogoutQuery {
+        data = typeof data === 'object' ? data : {};
+        let result = new LogoutQuery();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["email"] = this.email;
+        data["userId"] = this.userId;
+        return data;
+    }
+}
+
+export interface ILogoutQuery {
+    email?: string | undefined;
+    userId?: number | undefined;
 }
 
 export class GetTokenQuery implements IGetTokenQuery {
