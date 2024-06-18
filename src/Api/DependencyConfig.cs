@@ -11,7 +11,7 @@ public static class DependencyConfig
             options.AddPolicy(name: AppConstants.CorsPolicy,
                 builder =>
                 {
-                    builder.WithOrigins("http://localhost:3000",
+                    builder.WithOrigins("http://localhost:3000", "https://thuesimao.com", "http://thuesimao.com",
                                 "https://localhost:3000").AllowAnyMethod().AllowAnyHeader().AllowCredentials();
                 });
         });
