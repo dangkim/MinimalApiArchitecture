@@ -87,10 +87,7 @@ public class GetNews : ICarterModule
                         query = @"
                                 query NewsQuery {
                                       news {
-                                        bodyContent {
-                                          html
-                                        }
-                                        footerContent {
+                                        content {
                                           html
                                         }
                                       }
@@ -118,7 +115,7 @@ public class GetNews : ICarterModule
 
     }
 
-    public class BodyContent
+    public class Content
     {
         public string html { get; set; }
     }
@@ -128,15 +125,9 @@ public class GetNews : ICarterModule
         public List<News> news { get; set; }
     }
 
-    public class FooterContent
-    {
-        public string html { get; set; }
-    }
-
     public class News
     {
-        public BodyContent bodyContent { get; set; }
-        public FooterContent footerContent { get; set; }
+        public Content content { get; set; }
     }
 
     public class Root
