@@ -16,17 +16,17 @@ builder.Host.AddSerilog();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient("SimTokenClient", client =>
 {
-    client.BaseAddress = new Uri("https://:openapi.thuesimao.com/connect/");
+    client.BaseAddress = new Uri("https://openapi.thuesimao.com/connect/");
 });
 
 builder.Services.AddHttpClient("SimApiClient", client =>
 {
-    client.BaseAddress = new Uri("https://:openapi.thuesimao.com/api/content/");
+    client.BaseAddress = new Uri("https://openapi.thuesimao.com/api/content/");
 });
 
 builder.Services.AddHttpClient("SimGraphClient", client =>
 {
-    client.BaseAddress = new Uri("https://:openapi.thuesimao.com/api/graphql");
+    client.BaseAddress = new Uri("https://openapi.thuesimao.com/api/graphql");
 });
 
 builder.Services.Configure<CookiePolicyOptions>(options =>
