@@ -22,7 +22,8 @@ export interface IClient {
     deleteProduct(productId: number): Observable<void>;
     getCategories(): Observable<GetCategoriesResponse[]>;
     getBanks(): Observable<void>;
-    getNews(): Observable<void>;
+    getNews(lang: string | null): Observable<void>;
+    getEmailConfirmation(query: GetEmailConfirmationQuery): Observable<void>;
     getUserProfile(): Observable<void>;
     logout(query: LogoutQuery): Observable<void>;
     externalLoginGoogle(): Observable<void>;
@@ -374,8 +375,11 @@ export class Client implements IClient {
         return _observableOf<void>(null as any);
     }
 
-    getNews(): Observable<void> {
-        let url_ = this.baseUrl + "/api/getallnews";
+    getNews(lang: string | null): Observable<void> {
+        let url_ = this.baseUrl + "/api/getallnews/{lang}";
+        if (lang === undefined || lang === null)
+            throw new Error("The parameter 'lang' must be defined.");
+        url_ = url_.replace("{lang}", encodeURIComponent("" + lang));
         url_ = url_.replace(/[?&]$/, "");
 
         let options_ : any = {
@@ -400,6 +404,54 @@ export class Client implements IClient {
     }
 
     protected processGetNews(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
+            return _observableOf<void>(null as any);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap(_responseText => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf<void>(null as any);
+    }
+
+    getEmailConfirmation(query: GetEmailConfirmationQuery): Observable<void> {
+        let url_ = this.baseUrl + "/api/getemailconfirmation";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(query);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetEmailConfirmation(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetEmailConfirmation(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processGetEmailConfirmation(response: HttpResponseBase): Observable<void> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -1776,6 +1828,46 @@ export class GetCategoriesResponse implements IGetCategoriesResponse {
 export interface IGetCategoriesResponse {
     categoryId?: number;
     name?: string | undefined;
+}
+
+export class GetEmailConfirmationQuery implements IGetEmailConfirmationQuery {
+    userId?: string | undefined;
+    code?: string | undefined;
+
+    constructor(data?: IGetEmailConfirmationQuery) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            this.code = _data["code"];
+        }
+    }
+
+    static fromJS(data: any): GetEmailConfirmationQuery {
+        data = typeof data === 'object' ? data : {};
+        let result = new GetEmailConfirmationQuery();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["code"] = this.code;
+        return data;
+    }
+}
+
+export interface IGetEmailConfirmationQuery {
+    userId?: string | undefined;
+    code?: string | undefined;
 }
 
 export class LogoutQuery implements ILogoutQuery {

@@ -45,18 +45,18 @@ public class GetFSPrices : ICarterModule
             {
                 try
                 {
-                    var httpContext = httpContextAccessor.HttpContext!;
+                    //var httpContext = httpContextAccessor.HttpContext!;
 
-                    var tokenString = ValidateTokenHelper.ValidateAndExtractToken(httpContext, out IResult? validationResult);
+                    //var tokenString = ValidateTokenHelper.ValidateAndExtractToken(httpContext, out IResult? validationResult);
 
-                    if (validationResult != null)
-                    {
-                        return validationResult;
-                    }
+                    //if (validationResult != null)
+                    //{
+                    //    return validationResult;
+                    //}
 
                     var url = string.Format("pricesbycountryandproduct/{0}/{1}/{2}", request.Country ?? "", "any", request.Product ?? "");
 
-                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenString);
+                    //httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenString);
 
                     using var response = await httpClient.GetAsync(url, cancellationToken);
 

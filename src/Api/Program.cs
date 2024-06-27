@@ -16,12 +16,14 @@ builder.Host.AddSerilog();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient("SimTokenClient", client =>
 {
-    client.BaseAddress = new Uri("https://openapi.thuesimao.com/connect/");
+    //client.BaseAddress = new Uri("https://openapi.thuesimao.com/connect/");
+    client.BaseAddress = new Uri("https://localhost:44300/connect/");
 });
 
 builder.Services.AddHttpClient("SimApiClient", client =>
 {
-    client.BaseAddress = new Uri("https://openapi.thuesimao.com/api/content/");
+    //client.BaseAddress = new Uri("https://openapi.thuesimao.com/api/content/");
+    client.BaseAddress = new Uri("https://localhost:44300/api/content/");
 });
 
 builder.Services.AddHttpClient("SimGraphClient", client =>

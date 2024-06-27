@@ -24,15 +24,16 @@ public class GetNews : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        app.MapGet("api/getallnews", (IMediator mediator) =>
+        app.MapGet("api/getallnews/{lang}", (IMediator mediator, string? lang) =>
         {
-            return mediator.Send(new GetNewsQuery { });
+            return mediator.Send(new GetNewsQuery { Lang = lang });
         })
         .WithName(nameof(GetNews));
     }
 
     public class GetNewsQuery : IRequest<IResult>
     {
+        public string? Lang { get; set; }
     }
 
     public class GetNewsHandler(IDistributedCache cache, IHttpContextAccessor httpContextAccessor, ILogger<GetNewsHandler> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
@@ -69,7 +70,7 @@ public class GetNews : ICarterModule
                                             { "password", password }
                                         };
 
-                        var content = new FormUrlEncodedContent(formData);                        
+                        var content = new FormUrlEncodedContent(formData);
 
                         using var responseToken = await httpTokenClient.PostAsync("token", content, cancellationToken);
 
@@ -79,19 +80,19 @@ public class GetNews : ICarterModule
 
                             await cache.SetStringAsync(cacheTokenKey, cachedToken, cacheOptions, cancellationToken);
                         }
-                        
+
                     }
 
                     var payload = new
                     {
-                        query = @"
-                                query NewsQuery {
-                                      news {
-                                        content {
-                                          html
-                                        }
-                                      }
-                                    }"
+                        query = $@"
+                                query NewsQuery {{
+                                    news(where: {{ displayText_contains: ""[{request.Lang}]"" }}) {{
+                                        content {{
+                                            html
+                                        }}
+                                    }}
+                                }}"
                     };
 
                     using StringContent jsonContent = new(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
